@@ -1,12 +1,16 @@
 package com.geomaster.service;
 
+import com.geomaster.model.GameSession;
 import com.geomaster.model.User;
 import com.geomaster.repository.FriendshipRepository;
 import com.geomaster.repository.GameSessionRepository;
+import com.geomaster.repository.GuessRecordRepository;
 import com.geomaster.repository.UserRepository;
+import com.geomaster.exception.SessionNotFoundException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +26,7 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final GameSessionRepository gameSessionRepository;
+    private final GuessRecordRepository guessRecordRepository;
     private final FriendshipRepository friendshipRepository;
 
     public void requireAdmin(String callerEmail) {
@@ -41,6 +46,33 @@ public class AdminService {
         private long activeSessions;
         private double totalHoursPlayed;
         private long bannedUsers;
+    }
+
+    @Data
+    @Builder
+    public static class GuessRow {
+        private String id;
+        private String countryCode;
+        private boolean correct;
+        private int timeTakenMs;
+        private int pointsEarned;
+        private String guessedAt;
+    }
+
+    @Data
+    @Builder
+    public static class SessionRow {
+        private String id;
+        private String mapType;
+        private int finalScore;
+        private int correctCount;
+        private int totalCount;
+        private int bestStreak;
+        private String status;
+        private String startedAt;
+        private String completedAt;
+        private int flagCount;
+        private List<GuessRow> guesses;
     }
 
     @Data
@@ -102,6 +134,66 @@ public class AdminService {
                         .bestStreak(gameSessionRepository.findBestStreakByUserId(u.getId()).orElse(0))
                         .build())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionRow> getUserSessions(String userId) {
+        var sessions = gameSessionRepository
+                .findByUserIdOrderByStartedAtDesc(userId, PageRequest.of(0, 200))
+                .getContent();
+        return sessions.stream().map(s -> {
+            var guesses = guessRecordRepository.findBySessionIdOrderByGuessedAtAsc(s.getId())
+                    .stream().map(g -> GuessRow.builder()
+                            .id(g.getId())
+                            .countryCode(g.getCountryCode())
+                            .correct(g.isCorrect())
+                            .timeTakenMs(g.getTimeTakenMs())
+                            .pointsEarned(g.getPointsEarned())
+                            .guessedAt(g.getGuessedAt() != null ? g.getGuessedAt().toString() : null)
+                            .build())
+                    .toList();
+            return SessionRow.builder()
+                    .id(s.getId())
+                    .mapType(s.getMapType())
+                    .finalScore(s.getFinalScore())
+                    .correctCount(s.getCorrectCount())
+                    .totalCount(s.getTotalCount())
+                    .bestStreak(s.getBestStreak())
+                    .status(s.getStatus())
+                    .startedAt(s.getStartedAt() != null ? s.getStartedAt().toString() : null)
+                    .completedAt(s.getCompletedAt() != null ? s.getCompletedAt().toString() : null)
+                    .flagCount(s.getFlagCount())
+                    .guesses(guesses)
+                    .build();
+        }).toList();
+    }
+
+    @Transactional
+    public void flagSession(String sessionId) {
+        GameSession session = gameSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
+        session.setFlagCount(session.getFlagCount() + 1);
+        gameSessionRepository.save(session);
+
+        if (session.getFlagCount() >= 3) {
+            userRepository.findById(session.getUserId()).ifPresent(user -> {
+                if (!user.isBanned()) {
+                    user.setBanned(true);
+                    user.setBannedAt(Instant.now());
+                    user.setBanReason("Auto-banned: 3 flagged sessions detected");
+                    gameSessionRepository.deleteByUserId(user.getId());
+                    userRepository.save(user);
+                }
+            });
+        }
+    }
+
+    @Transactional
+    public void unflagSession(String sessionId) {
+        GameSession session = gameSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(sessionId));
+        session.setFlagCount(Math.max(0, session.getFlagCount() - 1));
+        gameSessionRepository.save(session);
     }
 
     @Transactional

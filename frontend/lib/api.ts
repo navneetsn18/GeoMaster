@@ -207,6 +207,29 @@ export const userApi = {
 
 // ─── Admin ─────────────────────────────────────────────────────────────────────
 
+export interface AdminGuess {
+  id: string;
+  countryCode: string;
+  correct: boolean;
+  timeTakenMs: number;
+  pointsEarned: number;
+  guessedAt?: string;
+}
+
+export interface AdminSession {
+  id: string;
+  mapType: string;
+  finalScore: number;
+  correctCount: number;
+  totalCount: number;
+  bestStreak: number;
+  status: string;
+  startedAt?: string;
+  completedAt?: string;
+  flagCount: number;
+  guesses: AdminGuess[];
+}
+
 export interface AdminStats {
   totalUsers: number;
   totalGames: number;
@@ -258,6 +281,16 @@ export const adminApi = {
   },
   setRole: async (id: string, role: "USER" | "ADMIN"): Promise<void> => {
     await api.patch(`/admin/users/${id}/role`, { role });
+  },
+  getUserSessions: async (userId: string): Promise<AdminSession[]> => {
+    const { data } = await api.get<AdminSession[]>(`/admin/users/${userId}/sessions`);
+    return data;
+  },
+  flagSession: async (sessionId: string): Promise<void> => {
+    await api.post(`/admin/sessions/${sessionId}/flag`);
+  },
+  unflagSession: async (sessionId: string): Promise<void> => {
+    await api.post(`/admin/sessions/${sessionId}/unflag`);
   },
 };
 

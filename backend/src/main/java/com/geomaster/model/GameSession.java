@@ -79,6 +79,10 @@ public class GameSession {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Column(name = "flag_count", nullable = false)
+    @Builder.Default
+    private int flagCount = 0;
+
     @PostLoad
     void syncCompleted() {
         this.completed = "COMPLETED".equals(this.status);

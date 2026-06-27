@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -55,6 +56,32 @@ public class AdminController {
         adminService.requireAdmin(userDetails.getUsername());
         adminService.deleteUserSessions(id);
         return ResponseEntity.ok(Map.of("message", "Sessions deleted"));
+    }
+
+    @GetMapping("/users/{id}/sessions")
+    public ResponseEntity<List<AdminService.SessionRow>> getUserSessions(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String id) {
+        adminService.requireAdmin(userDetails.getUsername());
+        return ResponseEntity.ok(adminService.getUserSessions(id));
+    }
+
+    @PostMapping("/sessions/{id}/flag")
+    public ResponseEntity<Map<String, String>> flagSession(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String id) {
+        adminService.requireAdmin(userDetails.getUsername());
+        adminService.flagSession(id);
+        return ResponseEntity.ok(Map.of("message", "Session flagged"));
+    }
+
+    @PostMapping("/sessions/{id}/unflag")
+    public ResponseEntity<Map<String, String>> unflagSession(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String id) {
+        adminService.requireAdmin(userDetails.getUsername());
+        adminService.unflagSession(id);
+        return ResponseEntity.ok(Map.of("message", "Session unflagged"));
     }
 
     @PostMapping("/users/{id}/ban")

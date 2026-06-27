@@ -1,0 +1,1 @@
+ALTER TABLE game_sessions ADD COLUMN flag_count INTEGER NOT NULL DEFAULT 0;

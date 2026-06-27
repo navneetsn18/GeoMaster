@@ -1,14 +1,250 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { adminApi, type AdminStats, type AdminUser } from "@/lib/api";
+import { adminApi, type AdminStats, type AdminUser, type AdminSession } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
+import { COUNTRY_NAMES } from "@/lib/country-codes";
 import {
   Users, Trophy, Clock, Activity, ShieldBan, ShieldCheck,
-  Trash2, Gamepad2, BarChart3, AlertTriangle, Crown
+  Trash2, Gamepad2, BarChart3, AlertTriangle, Crown,
+  Eye, Flag, ChevronDown, ChevronUp, X, CheckCircle2, XCircle,
 } from "lucide-react";
 import { getAvatarUrl } from "@/lib/avatar";
+
+const MODE_LABELS: Record<string, string> = {
+  WORLD: "World", AFRICA: "Africa", ASIA: "Asia", EUROPE: "Europe",
+  AMERICAS: "Americas", OCEANIA: "Oceania", INDIA_STATES: "India States",
+  WORLD_CAPITALS: "World Capitals", INDIA_CAPITALS: "India Capitals",
+};
+
+function formatMs(ms: number) {
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function SuspicionBadge({ ms }: { ms: number }) {
+  if (ms < 500) return <span className="text-red-400 font-bold text-xs" title="Suspiciously fast">{formatMs(ms)}</span>;
+  if (ms < 2000) return <span className="text-yellow-400 text-xs">{formatMs(ms)}</span>;
+  return <span className="text-muted-foreground text-xs">{formatMs(ms)}</span>;
+}
+
+function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
+  const [sessions, setSessions] = useState<AdminSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    adminApi.getUserSessions(user.id)
+      .then(setSessions)
+      .catch(() => setError("Failed to load sessions"))
+      .finally(() => setLoading(false));
+  }, [user.id]);
+
+  const toggleExpand = (id: string) =>
+    setExpanded(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+
+  const handleFlag = useCallback(async (sessionId: string, currentFlags: number) => {
+    setActionLoading(sessionId + ":flag");
+    try {
+      await adminApi.flagSession(sessionId);
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: currentFlags + 1 } : s));
+      if (currentFlags + 1 >= 3) {
+        setError("3 flags reached — user has been auto-banned.");
+      }
+    } catch { setError("Flag failed"); }
+    finally { setActionLoading(null); }
+  }, []);
+
+  const handleUnflag = useCallback(async (sessionId: string, currentFlags: number) => {
+    setActionLoading(sessionId + ":unflag");
+    try {
+      await adminApi.unflagSession(sessionId);
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: Math.max(0, currentFlags - 1) } : s));
+    } catch { setError("Unflag failed"); }
+    finally { setActionLoading(null); }
+  }, []);
+
+  const handleDelete = useCallback(async (sessionId: string) => {
+    if (!confirm("Delete this match and remove it from the leaderboard?")) return;
+    setActionLoading(sessionId + ":delete");
+    try {
+      await adminApi.deleteSession(sessionId);
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+    } catch { setError("Delete failed"); }
+    finally { setActionLoading(null); }
+  }, []);
+
+  const suspicionScore = (s: AdminSession) => {
+    if (!s.guesses.length) return 0;
+    const avgMs = s.guesses.reduce((a, g) => a + g.timeTakenMs, 0) / s.guesses.length;
+    const ultraFast = s.guesses.filter(g => g.timeTakenMs < 500).length;
+    return ultraFast > 3 || avgMs < 1500 ? ultraFast : 0;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-card border border-border rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-3">
+            <img src={getAvatarUrl(user.id, user.avatarUrl)} alt="" className="w-8 h-8 rounded-full" />
+            <div>
+              <h3 className="font-semibold">{user.username} — Match History</h3>
+              <p className="text-xs text-muted-foreground">{sessions.length} sessions</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-muted transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mx-4 mt-3 p-2 bg-red-500/20 border border-red-500/40 rounded text-red-400 text-xs flex items-center justify-between">
+            {error}
+            <button onClick={() => setError("")} className="underline">dismiss</button>
+          </div>
+        )}
+
+        {/* Body */}
+        <div className="overflow-y-auto flex-1 p-4 space-y-3">
+          {loading ? (
+            <div className="text-center text-muted-foreground py-12">Loading sessions…</div>
+          ) : sessions.length === 0 ? (
+            <div className="text-center text-muted-foreground py-12">No sessions found</div>
+          ) : sessions.map(s => {
+            const isExpanded = expanded.has(s.id);
+            const sus = suspicionScore(s);
+            const flagsLeft = Math.max(0, 3 - s.flagCount);
+
+            return (
+              <div key={s.id} className={`border rounded-lg overflow-hidden ${s.flagCount >= 3 ? "border-red-500/50 bg-red-950/10" : s.flagCount > 0 ? "border-yellow-500/40 bg-yellow-950/10" : "border-border/60"}`}>
+                {/* Session row */}
+                <div className="flex items-center gap-3 p-3">
+                  <button onClick={() => toggleExpand(s.id)} className="text-muted-foreground hover:text-foreground">
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    <div>
+                      <span className="text-xs text-muted-foreground block">Mode</span>
+                      <span className="font-medium">{MODE_LABELS[s.mapType] ?? s.mapType}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block">Score</span>
+                      <span className="font-semibold text-yellow-400">{s.finalScore.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block">Correct</span>
+                      <span>{s.correctCount}/{s.totalCount} ({s.totalCount > 0 ? ((s.correctCount / s.totalCount) * 100).toFixed(0) : 0}%)</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block">Date</span>
+                      <span className="text-xs">{s.completedAt ? new Date(s.completedAt).toLocaleDateString() : "Incomplete"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    {sus > 0 && (
+                      <span className="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 rounded px-1.5 py-0.5 font-bold" title="Suspicious timing">
+                        {sus} fast
+                      </span>
+                    )}
+                    {s.flagCount > 0 && (
+                      <span className={`text-[10px] rounded px-1.5 py-0.5 font-bold border ${s.flagCount >= 3 ? "bg-red-500/30 text-red-300 border-red-500/50" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"}`}>
+                        {s.flagCount}/3 flags
+                      </span>
+                    )}
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${s.status === "COMPLETED" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-muted text-muted-foreground border-border"}`}>
+                      {s.status === "COMPLETED" ? "Done" : s.status}
+                    </span>
+                    {/* Flag/unflag */}
+                    {s.flagCount < 3 ? (
+                      <button
+                        onClick={() => handleFlag(s.id, s.flagCount)}
+                        disabled={!!actionLoading}
+                        className="p-1.5 rounded hover:bg-yellow-500/20 text-yellow-500 transition-colors disabled:opacity-40"
+                        title={`Flag (${flagsLeft} more = auto-ban)`}
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnflag(s.id, s.flagCount)}
+                        disabled={!!actionLoading}
+                        className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors disabled:opacity-40"
+                        title="Remove flag"
+                      >
+                        <Flag className="w-3.5 h-3.5 opacity-40" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      disabled={!!actionLoading}
+                      className="p-1.5 rounded hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-40"
+                      title="Delete match (removes from leaderboard)"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Guess breakdown */}
+                {isExpanded && (
+                  <div className="border-t border-border/40 bg-muted/10 p-3">
+                    {s.guesses.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No guess records</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-muted-foreground border-b border-border/40">
+                              <th className="text-left pb-1.5 pr-3">#</th>
+                              <th className="text-left pb-1.5 pr-3">Country</th>
+                              <th className="text-center pb-1.5 pr-3">Result</th>
+                              <th className="text-right pb-1.5 pr-3">Time</th>
+                              <th className="text-right pb-1.5">Points</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {s.guesses.map((g, i) => (
+                              <tr key={g.id} className={`border-b border-border/20 ${g.timeTakenMs < 500 ? "bg-red-500/5" : ""}`}>
+                                <td className="py-1 pr-3 text-muted-foreground">{i + 1}</td>
+                                <td className="py-1 pr-3 font-medium">
+                                  {COUNTRY_NAMES[g.countryCode] ?? g.countryCode.toUpperCase()}
+                                </td>
+                                <td className="py-1 pr-3 text-center">
+                                  {g.correct
+                                    ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 inline" />
+                                    : <XCircle className="w-3.5 h-3.5 text-red-400 inline" />}
+                                </td>
+                                <td className="py-1 pr-3 text-right">
+                                  <SuspicionBadge ms={g.timeTakenMs} />
+                                </td>
+                                <td className="py-1 text-right text-muted-foreground">+{g.pointsEarned}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="mt-2 pt-2 border-t border-border/30 flex gap-4 text-[10px] text-muted-foreground">
+                          <span>Avg time: {s.guesses.length ? formatMs(Math.round(s.guesses.reduce((a, g) => a + g.timeTakenMs, 0) / s.guesses.length)) : "—"}</span>
+                          <span>Fastest: {s.guesses.length ? formatMs(Math.min(...s.guesses.map(g => g.timeTakenMs))) : "—"}</span>
+                          <span className="text-red-400">Under 500ms: {s.guesses.filter(g => g.timeTakenMs < 500).length}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -21,15 +257,13 @@ export default function AdminPage() {
   const [banReason, setBanReason] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [matchesUser, setMatchesUser] = useState<AdminUser | null>(null);
 
   const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!user) return;
-    if (!isAdmin) {
-      router.push("/dashboard");
-      return;
-    }
+    if (!isAdmin) { router.push("/dashboard"); return; }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin]);
@@ -39,11 +273,8 @@ export default function AdminPage() {
       const [s, u] = await Promise.all([adminApi.getStats(), adminApi.getUsers()]);
       setStats(s);
       setUsers(u);
-    } catch {
-      setError("Failed to load admin data");
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError("Failed to load admin data"); }
+    finally { setLoading(false); }
   }
 
   async function handleDeleteUser(u: AdminUser) {
@@ -73,8 +304,7 @@ export default function AdminPage() {
     try {
       const updated = await adminApi.banUser(banTarget.id, banReason || "Banned by admin");
       setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-      setBanTarget(null);
-      setBanReason("");
+      setBanTarget(null); setBanReason("");
       await load();
     } catch { setError("Ban failed"); }
     finally { setActionLoading(null); }
@@ -90,7 +320,7 @@ export default function AdminPage() {
   }
 
   async function handleSetRole(u: AdminUser, role: "USER" | "ADMIN") {
-    if (u.id === user?.id) return; // can't demote yourself
+    if (u.id === user?.id) return;
     setActionLoading(u.id + ":role");
     try {
       await adminApi.setRole(u.id, role);
@@ -117,9 +347,9 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm flex items-center justify-between">
           {error}
-          <button className="ml-2 underline" onClick={() => setError("")}>dismiss</button>
+          <button className="underline ml-2" onClick={() => setError("")}>dismiss</button>
         </div>
       )}
 
@@ -170,11 +400,7 @@ export default function AdminPage() {
                   <tr key={u.id} className={`border-b border-border/50 hover:bg-muted/20 ${u.banned ? "opacity-60" : ""}`}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        <img
-                          src={getAvatarUrl(u.id, u.avatarUrl)}
-                          alt=""
-                          className="w-7 h-7 rounded-full bg-muted object-cover"
-                        />
+                        <img src={getAvatarUrl(u.id, u.avatarUrl)} alt="" className="w-7 h-7 rounded-full bg-muted object-cover" />
                         <span className="font-medium">{u.username}</span>
                       </div>
                     </td>
@@ -189,9 +415,7 @@ export default function AdminPage() {
                           <Crown className="w-3 h-3" /> Admin
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                          User
-                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">User</span>
                       )}
                     </td>
                     <td className="p-3 text-center">
@@ -200,13 +424,20 @@ export default function AdminPage() {
                           <ShieldBan className="w-3 h-3" /> Banned
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
-                          Active
-                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">Active</span>
                       )}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-1">
+                        {/* View matches */}
+                        <button
+                          onClick={() => setMatchesUser(u)}
+                          disabled={!!actionLoading}
+                          className="p-1.5 rounded hover:bg-blue-500/20 text-blue-400 transition-colors"
+                          title="View matches"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         {u.id !== user?.id && (
                           <button
                             onClick={() => handleSetRole(u, u.role === "ADMIN" ? "USER" : "ADMIN")}
@@ -221,7 +452,7 @@ export default function AdminPage() {
                           onClick={() => handleDeleteSessions(u)}
                           disabled={!!actionLoading}
                           className="p-1.5 rounded hover:bg-orange-500/20 text-orange-400 transition-colors"
-                          title="Delete sessions"
+                          title="Delete all sessions"
                         >
                           <Gamepad2 className="w-4 h-4" />
                         </button>
@@ -262,6 +493,7 @@ export default function AdminPage() {
         )}
       </div>
 
+      {/* Ban modal */}
       {banTarget && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md">
@@ -276,22 +508,22 @@ export default function AdminPage() {
               onChange={e => setBanReason(e.target.value)}
             />
             <div className="flex gap-3">
-              <button
-                onClick={handleBan}
-                disabled={!!actionLoading}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm transition-colors"
-              >
+              <button onClick={handleBan} disabled={!!actionLoading}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium text-sm transition-colors">
                 Ban User
               </button>
-              <button
-                onClick={() => setBanTarget(null)}
-                className="flex-1 bg-muted hover:bg-muted/80 py-2 rounded-lg font-medium text-sm transition-colors"
-              >
+              <button onClick={() => setBanTarget(null)}
+                className="flex-1 bg-muted hover:bg-muted/80 py-2 rounded-lg font-medium text-sm transition-colors">
                 Cancel
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Matches modal */}
+      {matchesUser && (
+        <MatchesModal user={matchesUser} onClose={() => setMatchesUser(null)} />
       )}
     </div>
   );

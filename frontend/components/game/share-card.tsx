@@ -61,7 +61,9 @@ async function toDataUrl(url: string): Promise<string | null> {
   }
 }
 
-function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivElement>; data: ShareCardData }) {
+// Renders the card at exactly 600×340 with inline styles only (no Tailwind).
+// Pass a ref to get the DOM node for html2canvas capture.
+function ScoreCardCanvas({ cardRef, data }: { cardRef?: React.Ref<HTMLDivElement>; data: ShareCardData }) {
   const modeLabel = data.mapType ? (MODE_LABELS[data.mapType] ?? data.mapType) : null;
   const avatarBg = letterColor(data.username);
   const initial = data.username.charAt(0).toUpperCase();
@@ -79,19 +81,24 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
         fontFamily: "Inter, system-ui, -apple-system, sans-serif",
         display: "flex", flexDirection: "column",
         padding: "28px 36px 24px",
+        boxSizing: "border-box",
       }}
     >
+      {/* Dot grid */}
       <div style={{
         position: "absolute", inset: 0,
         backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
         backgroundSize: "24px 24px",
+        pointerEvents: "none",
       }} />
+      {/* Glow */}
       <div style={{
         position: "absolute", width: 360, height: 360, borderRadius: "50%",
         background: "radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%)",
         top: "65%", left: "55%", transform: "translate(-50%,-50%)",
         pointerEvents: "none",
       }} />
+      {/* Border */}
       <div style={{
         position: "absolute", inset: 14, borderRadius: 18,
         border: "1px solid rgba(255,255,255,0.08)",
@@ -102,7 +109,7 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
       {/* TOP ROW */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4ade80)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4ade80)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.9)" }} />
           </div>
           <span style={{ fontSize: 17, fontWeight: 900, color: "#fff", letterSpacing: "-0.4px" }}>GeoMaster</span>
@@ -119,30 +126,32 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
       </div>
 
       {/* MAIN ROW */}
-      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 28, flex: 1 }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, minWidth: 96 }}>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 28, flex: 1, minHeight: 0 }}>
+        {/* Left: avatar */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, width: 96, flexShrink: 0 }}>
           {data.avatarDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={data.avatarDataUrl}
               alt=""
-              style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "2.5px solid rgba(99,102,241,0.55)" }}
+              style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "2.5px solid rgba(99,102,241,0.55)", display: "block" }}
             />
           ) : (
             <div style={{
               width: 68, height: 68, borderRadius: "50%",
               background: avatarBg, border: "2.5px solid rgba(99,102,241,0.55)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 26, fontWeight: 800, color: "#fff",
+              fontSize: 26, fontWeight: 800, color: "#fff", flexShrink: 0,
             }}>{initial}</div>
           )}
-          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.82)" }}>@{data.username}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.82)", textAlign: "center", wordBreak: "break-all" }}>@{data.username}</span>
           {data.rank != null && (
             <div style={{
               background: data.rank <= 3 ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(255,255,255,0.09)",
               borderRadius: 100, padding: "2px 9px",
               fontSize: 11.5, fontWeight: 800, color: "#fff",
             }}>
-              {data.rank === 1 ? "#1" : data.rank === 2 ? "#2" : data.rank === 3 ? "#3" : `#${data.rank}`}
+              #{data.rank}
             </div>
           )}
           {data.isPB && !data.rank && (
@@ -154,9 +163,11 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
           )}
         </div>
 
+        {/* Divider */}
         <div style={{ width: 1, height: 110, background: "rgba(255,255,255,0.09)", flexShrink: 0 }} />
 
-        <div style={{ flex: 1 }}>
+        {/* Right: stats */}
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontSize: 66, fontWeight: 900, lineHeight: 1,
             color: "#4ade80",
@@ -164,10 +175,10 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
           }}>
             {formatScore(data.score)}
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "2.5px", marginBottom: 18 }}>
-            FINAL SCORE
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "2.5px", marginBottom: 18, textTransform: "uppercase" }}>
+            Final Score
           </div>
-          <div style={{ display: "flex", gap: 24 }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[
               { label: "Accuracy", val: formatAccuracy(data.accuracy), color: "#818cf8" },
               ...(data.streak != null ? [{ label: "Streak", val: `${data.streak}x`, color: "#fb923c" }] : []),
@@ -196,24 +207,53 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
   );
 }
 
-async function captureAndExport(cardEl: HTMLDivElement, data: ShareCardData, action: "share" | "download") {
-  const html2canvas = (await import("html2canvas")).default;
-  const canvas = await html2canvas(cardEl, {
-    scale: 2, useCORS: true, allowTaint: false,
-    backgroundColor: "#070d1a", logging: false,
-    width: 600, height: 340,
+async function captureAndExport(data: ShareCardData, action: "share" | "download") {
+  // Render card off-screen at exact size, capture that — avoids dialog/scroll/transform distortion
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;left:-9999px;top:0;width:600px;height:340px;";
+  document.body.appendChild(container);
+
+  const { createRoot } = await import("react-dom/client");
+  const { createElement } = await import("react");
+
+  const root = createRoot(container);
+
+  await new Promise<void>(resolve => {
+    root.render(createElement(ScoreCardCanvas, { data }));
+    // Give React two frames to render and apply styles
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
-  await new Promise<void>((resolve) => {
-    canvas.toBlob(async (blob) => {
+
+  const el = container.firstElementChild as HTMLDivElement;
+  const html2canvas = (await import("html2canvas")).default;
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: "#070d1a",
+    logging: false,
+    width: 600,
+    height: 340,
+    x: 0,
+    y: 0,
+    scrollX: 0,
+    scrollY: 0,
+  });
+
+  root.unmount();
+  document.body.removeChild(container);
+
+  const filename = `geomaster-${data.username}-${data.score}.png`;
+  await new Promise<void>(resolve => {
+    canvas.toBlob(async blob => {
       if (!blob) return resolve();
-      const filename = `geomaster-${data.username}-${data.score}.png`;
       if (action === "share") {
         const file = new File([blob], filename, { type: "image/png" });
         if (navigator.canShare?.({ files: [file] })) {
           await navigator.share({
             files: [file],
             title: "GeoMaster Score",
-            text: `I scored ${formatScore(data.score)} on GeoMaster! Can you beat me? 🌍`,
+            text: `I scored ${formatScore(data.score)} on GeoMaster! Can you beat me?`,
           }).catch(() => {});
           return resolve();
         }
@@ -233,32 +273,31 @@ function ShareDialog({ rawAvatarUrl, baseData, open, onClose }: {
   open: boolean;
   onClose: () => void;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | undefined>();
 
   useEffect(() => {
     if (!open || !rawAvatarUrl) return;
-    toDataUrl(rawAvatarUrl).then((d) => setAvatarDataUrl(d ?? undefined));
+    toDataUrl(rawAvatarUrl).then(d => setAvatarDataUrl(d ?? undefined));
   }, [open, rawAvatarUrl]);
 
   const data: ShareCardData = { ...baseData, avatarDataUrl };
 
   const doCapture = useCallback(async (action: "share" | "download") => {
-    if (!cardRef.current) return;
     setCapturing(true);
-    try { await captureAndExport(cardRef.current, data, action); }
+    try { await captureAndExport(data, action); }
     finally { setCapturing(false); }
   }, [data]);
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
       <DialogContent className="max-w-[660px] p-6">
         <DialogTitle className="text-lg font-bold mb-4">Share Score</DialogTitle>
-        <div className="flex justify-center mb-5 rounded-xl overflow-hidden shadow-xl">
-          <ScoreCardCanvas cardRef={cardRef as React.RefObject<HTMLDivElement>} data={data} />
+        {/* Preview — scaled down to fit dialog */}
+        <div className="flex justify-center mb-5 rounded-xl overflow-hidden shadow-xl" style={{ transform: "scale(0.9)", transformOrigin: "top center", height: 306 }}>
+          <ScoreCardCanvas data={data} />
         </div>
         <div className="flex gap-3">
           {canShare && (
@@ -319,7 +358,7 @@ export function ShareEntryButton({ entry }: { entry: LeaderboardEntry }) {
   return (
     <>
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        onClick={e => { e.stopPropagation(); setOpen(true); }}
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         title="Share this score"
       >
@@ -349,7 +388,7 @@ export function ShareGameButton({ game, username, userId, avatarUrl }: {
   return (
     <>
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        onClick={e => { e.stopPropagation(); setOpen(true); }}
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         title="Share this score"
       >
