@@ -8,17 +8,19 @@ interface CountryPromptProps {
   country: Country;
   totalRemaining: number;
   totalCountries: number;
+  promptLabel?: string;
 }
 
 export function CountryPrompt({
   country,
   totalRemaining,
   totalCountries,
+  promptLabel,
 }: CountryPromptProps) {
   return (
     <div className="flex flex-col items-center py-4 px-4 gap-3">
       <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
-        Find this country
+        {promptLabel ?? "Find this country"}
       </p>
       <AnimatePresence mode="wait">
         <motion.div

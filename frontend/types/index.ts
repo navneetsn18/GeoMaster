@@ -30,7 +30,9 @@ export type MapType =
   | "EUROPE"
   | "AMERICAS"
   | "OCEANIA"
-  | "COUNTRY";
+  | "COUNTRY"
+  | "WORLD_CAPITALS"
+  | "INDIA_CAPITALS";
 
 export interface GuessPayload {
   countryCode: string; // alpha-2
@@ -171,5 +173,21 @@ export const GAME_MODES: GameMode[] = [
     description: "28 states + 8 UTs",
     totalCountries: 36,
     href: "/play/india",
+  },
+  {
+    id: "WORLD_CAPITALS",
+    label: "World Capitals",
+    emoji: "🏛️",
+    description: "Capital cities of 195 countries",
+    totalCountries: 195,
+    href: "/play/world-capitals",
+  },
+  {
+    id: "INDIA_CAPITALS",
+    label: "India Capitals",
+    emoji: "🏛️",
+    description: "Capitals of 36 states & UTs",
+    totalCountries: 36,
+    href: "/play/india-capitals",
   },
 ];

@@ -20,12 +20,14 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
 
 const MAP_TYPES: { value: MapType; label: string }[] = [
   { value: "WORLD", label: "🌍 World" },
+  { value: "WORLD_CAPITALS", label: "🏛️ World Capitals" },
   { value: "AFRICA", label: "🌍 Africa" },
   { value: "ASIA", label: "🌏 Asia" },
   { value: "EUROPE", label: "🌍 Europe" },
   { value: "AMERICAS", label: "🌎 Americas" },
   { value: "OCEANIA", label: "🌏 Oceania" },
   { value: "COUNTRY", label: "🇮🇳 India" },
+  { value: "INDIA_CAPITALS", label: "🏛️ India Capitals" },
 ];
 
 export default function LeaderboardPage() {

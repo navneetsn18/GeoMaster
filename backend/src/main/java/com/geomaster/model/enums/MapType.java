@@ -7,5 +7,7 @@ public enum MapType {
     EUROPE,
     AMERICAS,
     OCEANIA,
-    COUNTRY
+    COUNTRY,
+    WORLD_CAPITALS,
+    INDIA_CAPITALS
 }

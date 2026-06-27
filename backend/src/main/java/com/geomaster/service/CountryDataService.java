@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -332,6 +333,106 @@ public class CountryDataService {
         new Country("IN-PY", "Puducherry", "IN")
     );
 
+    private static final Map<String, String> WORLD_CAPITALS_MAP = Map.ofEntries(
+        // Africa
+        Map.entry("DZ", "Algiers"), Map.entry("AO", "Luanda"), Map.entry("BJ", "Porto-Novo"),
+        Map.entry("BW", "Gaborone"), Map.entry("BF", "Ouagadougou"), Map.entry("BI", "Gitega"),
+        Map.entry("CV", "Praia"), Map.entry("CM", "Yaoundé"), Map.entry("CF", "Bangui"),
+        Map.entry("TD", "N'Djamena"), Map.entry("KM", "Moroni"), Map.entry("CG", "Brazzaville"),
+        Map.entry("CD", "Kinshasa"), Map.entry("DJ", "Djibouti"), Map.entry("EG", "Cairo"),
+        Map.entry("GQ", "Malabo"), Map.entry("ER", "Asmara"), Map.entry("SZ", "Mbabane"),
+        Map.entry("ET", "Addis Ababa"), Map.entry("GA", "Libreville"), Map.entry("GM", "Banjul"),
+        Map.entry("GH", "Accra"), Map.entry("GN", "Conakry"), Map.entry("GW", "Bissau"),
+        Map.entry("CI", "Yamoussoukro"), Map.entry("KE", "Nairobi"), Map.entry("LS", "Maseru"),
+        Map.entry("LR", "Monrovia"), Map.entry("LY", "Tripoli"), Map.entry("MG", "Antananarivo"),
+        Map.entry("MW", "Lilongwe"), Map.entry("ML", "Bamako"), Map.entry("MR", "Nouakchott"),
+        Map.entry("MU", "Port Louis"), Map.entry("MA", "Rabat"), Map.entry("MZ", "Maputo"),
+        Map.entry("NA", "Windhoek"), Map.entry("NE", "Niamey"), Map.entry("NG", "Abuja"),
+        Map.entry("RW", "Kigali"), Map.entry("ST", "São Tomé"), Map.entry("SN", "Dakar"),
+        Map.entry("SC", "Victoria"), Map.entry("SL", "Freetown"), Map.entry("SO", "Mogadishu"),
+        Map.entry("ZA", "Pretoria"), Map.entry("SS", "Juba"), Map.entry("SD", "Khartoum"),
+        Map.entry("TZ", "Dodoma"), Map.entry("TG", "Lomé"), Map.entry("TN", "Tunis"),
+        Map.entry("UG", "Kampala"), Map.entry("ZM", "Lusaka"), Map.entry("ZW", "Harare"),
+        // Asia
+        Map.entry("AF", "Kabul"), Map.entry("AM", "Yerevan"), Map.entry("AZ", "Baku"),
+        Map.entry("BH", "Manama"), Map.entry("BD", "Dhaka"), Map.entry("BT", "Thimphu"),
+        Map.entry("BN", "Bandar Seri Begawan"), Map.entry("KH", "Phnom Penh"),
+        Map.entry("CN", "Beijing"), Map.entry("CY", "Nicosia"), Map.entry("GE", "Tbilisi"),
+        Map.entry("IN", "New Delhi"), Map.entry("ID", "Jakarta"), Map.entry("IR", "Tehran"),
+        Map.entry("IQ", "Baghdad"), Map.entry("IL", "Jerusalem"), Map.entry("JP", "Tokyo"),
+        Map.entry("JO", "Amman"), Map.entry("KZ", "Astana"), Map.entry("KW", "Kuwait City"),
+        Map.entry("KG", "Bishkek"), Map.entry("LA", "Vientiane"), Map.entry("LB", "Beirut"),
+        Map.entry("MY", "Kuala Lumpur"), Map.entry("MV", "Malé"), Map.entry("MN", "Ulaanbaatar"),
+        Map.entry("MM", "Naypyidaw"), Map.entry("NP", "Kathmandu"), Map.entry("KP", "Pyongyang"),
+        Map.entry("OM", "Muscat"), Map.entry("PK", "Islamabad"), Map.entry("PS", "Ramallah"),
+        Map.entry("PH", "Manila"), Map.entry("QA", "Doha"), Map.entry("SA", "Riyadh"),
+        Map.entry("SG", "Singapore"), Map.entry("KR", "Seoul"), Map.entry("LK", "Kotte"),
+        Map.entry("SY", "Damascus"), Map.entry("TW", "Taipei"), Map.entry("TJ", "Dushanbe"),
+        Map.entry("TH", "Bangkok"), Map.entry("TL", "Dili"), Map.entry("TR", "Ankara"),
+        Map.entry("TM", "Ashgabat"), Map.entry("AE", "Abu Dhabi"), Map.entry("UZ", "Tashkent"),
+        Map.entry("VN", "Hanoi"), Map.entry("YE", "Sana'a"),
+        // Europe
+        Map.entry("AL", "Tirana"), Map.entry("AD", "Andorra la Vella"), Map.entry("AT", "Vienna"),
+        Map.entry("BY", "Minsk"), Map.entry("BE", "Brussels"), Map.entry("BA", "Sarajevo"),
+        Map.entry("BG", "Sofia"), Map.entry("HR", "Zagreb"), Map.entry("CZ", "Prague"),
+        Map.entry("DK", "Copenhagen"), Map.entry("EE", "Tallinn"), Map.entry("FI", "Helsinki"),
+        Map.entry("FR", "Paris"), Map.entry("DE", "Berlin"), Map.entry("GR", "Athens"),
+        Map.entry("HU", "Budapest"), Map.entry("IS", "Reykjavik"), Map.entry("IE", "Dublin"),
+        Map.entry("IT", "Rome"), Map.entry("XK", "Pristina"), Map.entry("LV", "Riga"),
+        Map.entry("LI", "Vaduz"), Map.entry("LT", "Vilnius"), Map.entry("LU", "Luxembourg City"),
+        Map.entry("MT", "Valletta"), Map.entry("MD", "Chișinău"), Map.entry("MC", "Monaco"),
+        Map.entry("ME", "Podgorica"), Map.entry("NL", "Amsterdam"), Map.entry("MK", "Skopje"),
+        Map.entry("NO", "Oslo"), Map.entry("PL", "Warsaw"), Map.entry("PT", "Lisbon"),
+        Map.entry("RO", "Bucharest"), Map.entry("RU", "Moscow"), Map.entry("SM", "San Marino"),
+        Map.entry("RS", "Belgrade"), Map.entry("SK", "Bratislava"), Map.entry("SI", "Ljubljana"),
+        Map.entry("ES", "Madrid"), Map.entry("SE", "Stockholm"), Map.entry("CH", "Bern"),
+        Map.entry("UA", "Kyiv"), Map.entry("GB", "London"), Map.entry("VA", "Vatican City"),
+        // North America
+        Map.entry("AG", "Saint John's"), Map.entry("BS", "Nassau"), Map.entry("BB", "Bridgetown"),
+        Map.entry("BZ", "Belmopan"), Map.entry("CA", "Ottawa"), Map.entry("CR", "San José"),
+        Map.entry("CU", "Havana"), Map.entry("DM", "Roseau"), Map.entry("DO", "Santo Domingo"),
+        Map.entry("SV", "San Salvador"), Map.entry("GD", "St. George's"),
+        Map.entry("GT", "Guatemala City"), Map.entry("HT", "Port-au-Prince"),
+        Map.entry("HN", "Tegucigalpa"), Map.entry("JM", "Kingston"),
+        Map.entry("MX", "Mexico City"), Map.entry("NI", "Managua"),
+        Map.entry("PA", "Panama City"), Map.entry("KN", "Basseterre"),
+        Map.entry("LC", "Castries"), Map.entry("VC", "Kingstown"),
+        Map.entry("TT", "Port of Spain"), Map.entry("US", "Washington D.C."),
+        // South America
+        Map.entry("AR", "Buenos Aires"), Map.entry("BO", "Sucre"), Map.entry("BR", "Brasília"),
+        Map.entry("CL", "Santiago"), Map.entry("CO", "Bogotá"), Map.entry("EC", "Quito"),
+        Map.entry("GY", "Georgetown"), Map.entry("PY", "Asunción"), Map.entry("PE", "Lima"),
+        Map.entry("SR", "Paramaribo"), Map.entry("UY", "Montevideo"), Map.entry("VE", "Caracas"),
+        // Oceania
+        Map.entry("AU", "Canberra"), Map.entry("FJ", "Suva"), Map.entry("KI", "South Tarawa"),
+        Map.entry("MH", "Majuro"), Map.entry("FM", "Palikir"), Map.entry("NR", "Yaren"),
+        Map.entry("NZ", "Wellington"), Map.entry("PW", "Ngerulmud"),
+        Map.entry("PG", "Port Moresby"), Map.entry("WS", "Apia"), Map.entry("SB", "Honiara"),
+        Map.entry("TO", "Nukualofa"), Map.entry("TV", "Funafuti"), Map.entry("VU", "Port Vila")
+    );
+
+    private static final Map<String, String> INDIA_CAPITALS_MAP = Map.ofEntries(
+        Map.entry("IN-AP", "Amaravati"), Map.entry("IN-AR", "Itanagar"),
+        Map.entry("IN-AS", "Dispur"), Map.entry("IN-BR", "Patna"),
+        Map.entry("IN-CT", "Raipur"), Map.entry("IN-GA", "Panaji"),
+        Map.entry("IN-GJ", "Gandhinagar"), Map.entry("IN-HR", "Chandigarh"),
+        Map.entry("IN-HP", "Shimla"), Map.entry("IN-JH", "Ranchi"),
+        Map.entry("IN-KA", "Bengaluru"), Map.entry("IN-KL", "Thiruvananthapuram"),
+        Map.entry("IN-MP", "Bhopal"), Map.entry("IN-MH", "Mumbai"),
+        Map.entry("IN-MN", "Imphal"), Map.entry("IN-ML", "Shillong"),
+        Map.entry("IN-MZ", "Aizawl"), Map.entry("IN-NL", "Kohima"),
+        Map.entry("IN-OR", "Bhubaneswar"), Map.entry("IN-PB", "Chandigarh"),
+        Map.entry("IN-RJ", "Jaipur"), Map.entry("IN-SK", "Gangtok"),
+        Map.entry("IN-TN", "Chennai"), Map.entry("IN-TG", "Hyderabad"),
+        Map.entry("IN-TR", "Agartala"), Map.entry("IN-UP", "Lucknow"),
+        Map.entry("IN-UT", "Dehradun"), Map.entry("IN-WB", "Kolkata"),
+        Map.entry("IN-AN", "Port Blair"), Map.entry("IN-CH", "Chandigarh"),
+        Map.entry("IN-DH", "Silvassa"), Map.entry("IN-DD", "Daman"),
+        Map.entry("IN-DL", "New Delhi"), Map.entry("IN-JK", "Srinagar"),
+        Map.entry("IN-LA", "Leh"), Map.entry("IN-LD", "Kavaratti"),
+        Map.entry("IN-PY", "Puducherry")
+    );
+
     public List<Country> getCountriesForMapType(MapType mapType, String regionCode) {
         List<Country> result = switch (mapType) {
             case WORLD -> new ArrayList<>(ALL_COUNTRIES);
@@ -351,6 +452,12 @@ public class CountryDataService {
                     .filter(c -> "OC".equals(c.continent()))
                     .collect(Collectors.toList());
             case COUNTRY -> getSubdivisions(regionCode);
+            case WORLD_CAPITALS -> ALL_COUNTRIES.stream()
+                    .map(c -> new Country(c.code(), WORLD_CAPITALS_MAP.getOrDefault(c.code(), c.name()), c.continent()))
+                    .collect(Collectors.toList());
+            case INDIA_CAPITALS -> INDIA_STATES.stream()
+                    .map(c -> new Country(c.code(), INDIA_CAPITALS_MAP.getOrDefault(c.code(), c.name()), c.continent()))
+                    .collect(Collectors.toList());
         };
 
         Collections.shuffle(result);
@@ -370,10 +477,19 @@ public class CountryDataService {
 
     public Country findCountryByCode(String code) {
         if (code == null) return null;
-        // Search countries first, then all subdivisions
         return Stream.concat(ALL_COUNTRIES.stream(), INDIA_STATES.stream())
                 .filter(c -> c.code().equalsIgnoreCase(code))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public boolean isValidCode(String code, MapType mapType) {
+        if (code == null) return false;
+        List<Country> pool = switch (mapType) {
+            case WORLD_CAPITALS -> ALL_COUNTRIES;
+            case INDIA_CAPITALS -> INDIA_STATES;
+            default -> Stream.concat(ALL_COUNTRIES.stream(), INDIA_STATES.stream()).toList();
+        };
+        return pool.stream().anyMatch(c -> c.code().equalsIgnoreCase(code));
     }
 }
