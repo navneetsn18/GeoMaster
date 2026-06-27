@@ -78,8 +78,11 @@ public final class ProfanityFilter {
     /**
      * Splits text into alpha-only tokens, then checks each token:
      * 1. Exact match with a blocked word
-     * 2. Token starts with a blocked word (catches "fuckyou", "shithead42")
-     * 3. Token ends with a blocked word (catches "yourass", "bigcock")
+     * 2. Token starts with a blocked word (catches "fuckyou", "asshole42")
+     *
+     * Note: endsWith is intentionally omitted — it causes false positives on
+     * innocent words like "class" (endsWith "ass"), "skill" (endsWith "kill"),
+     * "classic", "passage" etc.
      */
     private static boolean isTokenBlocked(String text) {
         if (text == null || text.isBlank()) return false;
@@ -87,9 +90,7 @@ public final class ProfanityFilter {
             if (token.isEmpty()) continue;
             if (BLOCKED.contains(token)) return true;
             for (String word : BLOCKED) {
-                if (token.length() > word.length()) {
-                    if (token.startsWith(word) || token.endsWith(word)) return true;
-                }
+                if (token.length() > word.length() && token.startsWith(word)) return true;
             }
         }
         return false;
