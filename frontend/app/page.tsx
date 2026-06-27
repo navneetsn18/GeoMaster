@@ -141,9 +141,9 @@ function FlightArcs() {
                 calcMode="linear"
               />
             </path>
-            {/* Plane along arc — top-view silhouette, rotate="auto" faces direction of travel */}
+            {/* Plane — top-view airliner, rotate="auto" aligns nose to travel direction */}
             <path id={pathId} d={arc.d} fill="none" />
-            <g fill="white">
+            <g>
               <animateMotion
                 dur={`${r.dur}s`}
                 begin={`${r.delay}s`}
@@ -152,11 +152,23 @@ function FlightArcs() {
               >
                 <mpath href={`#${pathId}`} />
               </animateMotion>
-              {/* fuselage (points right = +x) */}
-              <polygon points="7,0 -4,-2 -2,0 -4,2" opacity="0.95" />
-              {/* swept wings */}
-              <polygon points="-1,-0.8 1,-6.5 -4,-5 -3,-0.8" opacity="0.7" />
-              <polygon points="-1,0.8 1,6.5 -4,5 -3,0.8" opacity="0.7" />
+              {/* Glow halo behind plane */}
+              <ellipse cx="0" cy="0" rx="11" ry="6" fill="rgba(99,179,237,0.18)" />
+              {/* Fuselage: pointed nose at x=9, tapers to blunt tail at x=-8, width ±1.4 */}
+              <path
+                d="M 9,0 L 7,-1.2 L -5.5,-1.5 L -8,-0.6 L -8,0.6 L -5.5,1.5 L 7,1.2 Z"
+                fill="white"
+                opacity="0.96"
+              />
+              {/* Main wings: swept back, root at x≈2 y±1.2, tip at x≈-2 y±7 */}
+              <polygon points="2.5,-1.2 0,-7.5 -3.5,-7 -0.5,-1.2" fill="white" opacity="0.88" />
+              <polygon points="2.5,1.2 0,7.5 -3.5,7 -0.5,1.2" fill="white" opacity="0.88" />
+              {/* Engine pods under wings at ~1/3 span */}
+              <ellipse cx="0.8" cy="-4.2" rx="2.2" ry="0.85" fill="rgba(180,215,255,0.92)" />
+              <ellipse cx="0.8" cy="4.2" rx="2.2" ry="0.85" fill="rgba(180,215,255,0.92)" />
+              {/* Horizontal tail stabilizers: small, at tail */}
+              <polygon points="-5.5,-1.2 -6.5,-3.2 -8.2,-3.0 -7.0,-1.2" fill="white" opacity="0.72" />
+              <polygon points="-5.5,1.2 -6.5,3.2 -8.2,3.0 -7.0,1.2" fill="white" opacity="0.72" />
             </g>
             {/* Trailing glow dot */}
             <circle r="5" fill="rgba(99,179,237,0.25)">
