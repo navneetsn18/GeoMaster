@@ -204,6 +204,7 @@ public class UserService {
                         .bestScore(gameSessionRepository.findBestScoreByUserId(f.getId()).orElse(0))
                         .avgAccuracy(gameSessionRepository.findAvgAccuracyByUserId(f.getId()).orElse(0.0) * 100.0)
                         .bestStreak(gameSessionRepository.findBestStreakByUserId(f.getId()).orElse(0))
+                        .banned(f.isBanned())
                         .build())
                 .toList();
     }

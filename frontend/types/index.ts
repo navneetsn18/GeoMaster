@@ -106,6 +106,7 @@ export interface Following {
   bestScore?: number;
   avgAccuracy?: number;
   bestStreak?: number;
+  banned?: boolean;
 }
 
 export interface AuthResponse {

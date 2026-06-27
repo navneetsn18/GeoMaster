@@ -359,10 +359,10 @@ export default function ProfilePage() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {following.map((person) => (
-              <Card key={person.id} className="hover:border-primary/40 transition-colors">
+              <Card key={person.id} className={`transition-colors ${person.banned ? "border-red-500/40 bg-red-950/10" : "hover:border-primary/40"}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                    <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 ${person.banned ? "opacity-40 grayscale" : ""}`}>
                       <img
                         src={getAvatarUrl(person.id, person.avatarUrl)}
                         alt={person.username}
@@ -370,7 +370,14 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate">{person.username}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className={`font-semibold truncate ${person.banned ? "line-through text-muted-foreground" : ""}`}>{person.username}</p>
+                        {person.banned && (
+                          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded">
+                            Banned
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <Button
                       variant="ghost"
@@ -381,6 +388,9 @@ export default function ProfilePage() {
                       Unfollow
                     </Button>
                   </div>
+                  {person.banned ? (
+                    <p className="text-xs text-red-400/70 italic">Account suspended by admin.</p>
+                  ) : (
                   <div className="grid grid-cols-2 gap-1.5 text-xs">
                     <div className="bg-muted/50 rounded px-2 py-1">
                       <p className="text-muted-foreground">Games</p>
@@ -399,6 +409,7 @@ export default function ProfilePage() {
                       <p className="font-semibold text-orange-400">{person.bestStreak ?? "—"}x</p>
                     </div>
                   </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

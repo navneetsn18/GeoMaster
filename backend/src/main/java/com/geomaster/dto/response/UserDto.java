@@ -20,4 +20,5 @@ public class UserDto {
     private Integer bestScore;
     private Double avgAccuracy;
     private Integer bestStreak;
+    private boolean banned;
 }
