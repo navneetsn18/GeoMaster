@@ -279,7 +279,7 @@ export default function IndiaCapitalsPage() {
             >
               <div className="bg-background/90 backdrop-blur-sm border border-primary/40 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl">
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                <span className="text-sm font-medium text-primary">Registering…</span>
+                <span className="text-sm font-medium text-primary">Checking…</span>
               </div>
             </motion.div>
           )}

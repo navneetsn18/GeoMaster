@@ -27,7 +27,7 @@ const MAP_TYPES: { value: MapType; label: string }[] = [
   { value: "AMERICAS", label: "🌎 Americas" },
   { value: "OCEANIA", label: "🌏 Oceania" },
   { value: "COUNTRY", label: "🇮🇳 India" },
-  { value: "INDIA_CAPITALS", label: "🏛️ India Capitals" },
+  { value: "INDIA_CAPITALS", label: "🇮🇳 India Capitals" },
 ];
 
 export default function LeaderboardPage() {
