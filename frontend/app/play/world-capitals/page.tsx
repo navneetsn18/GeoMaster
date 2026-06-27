@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
 import { ScoreModal } from "@/components/game/score-modal";
+import { SkipButton } from "@/components/game/skip-button";
 import { Button } from "@/components/ui/button";
 
 import { useGameStore, type TimerMode } from "@/lib/game-store";
@@ -213,7 +214,6 @@ export default function WorldCapitalsPage() {
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
         onEndGame={handleEndGame}
-        onSkip={handleSkip}
         currentCountry={currentCountry ?? undefined}
         promptLabel="Whose capital is"
       />
@@ -223,6 +223,7 @@ export default function WorldCapitalsPage() {
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
         />
+        <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 
         {isStarted && !isComplete && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-muted-foreground pointer-events-none">

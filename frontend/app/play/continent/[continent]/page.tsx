@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
 import { ScoreModal } from "@/components/game/score-modal";
+import { SkipButton } from "@/components/game/skip-button";
 import { Button } from "@/components/ui/button";
 
 import { useGameStore, type TimerMode } from "@/lib/game-store";
@@ -207,7 +208,6 @@ export default function ContinentGamePage() {
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
-        onSkip={handleSkip}
         currentCountry={currentCountry ?? undefined}
         onEndGame={async () => {
           if (!sessionId || isComplete) return;
@@ -236,6 +236,7 @@ export default function ContinentGamePage() {
           disabled={isGuessing || isPaused || isComplete}
           filterCodes={new Set(countries.map((c) => c.code.toLowerCase()))}
         />
+        <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 
         {!isComplete && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-muted-foreground pointer-events-none">

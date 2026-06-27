@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IndiaMap } from "@/components/game/india-map";
 import { GameHeader } from "@/components/game/game-header";
 import { ScoreModal } from "@/components/game/score-modal";
+import { SkipButton } from "@/components/game/skip-button";
 import { Button } from "@/components/ui/button";
 
 import { useGameStore, type TimerMode } from "@/lib/game-store";
@@ -218,7 +219,6 @@ export default function IndiaCapitalsPage() {
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
         onEndGame={handleEndGame}
-        onSkip={handleSkip}
         currentCountry={currentCountry ?? undefined}
         promptLabel="Whose capital is"
       />
@@ -231,6 +231,7 @@ export default function IndiaCapitalsPage() {
           wrongGuesses={wrongGuesses}
           targetCode={currentCountry?.code.toLowerCase()}
         />
+        <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 
         {/* Small territories panel */}
         {!isComplete && smallUTs.length > 0 && (

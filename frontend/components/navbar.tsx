@@ -50,6 +50,8 @@ export default function Navbar() {
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
+  const isGamePage = pathname?.startsWith("/play/");
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/30 bg-background/40 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
@@ -64,8 +66,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Center nav — desktop */}
-        {user && (
+        {/* Center nav — desktop — hidden during game */}
+        {user && !isGamePage && (
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map(({ href, label, icon: Icon }) => (
               <Link
@@ -137,7 +139,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      {mobileOpen && (
+      {mobileOpen && !isGamePage && (
         <div className="md:hidden border-t border-border bg-background/95 py-3 px-4 flex flex-col gap-1">
           {user ? (
             <>

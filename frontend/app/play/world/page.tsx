@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
 import { ScoreModal } from "@/components/game/score-modal";
+import { SkipButton } from "@/components/game/skip-button";
 import { Button } from "@/components/ui/button";
 
 import { useGameStore, type TimerMode } from "@/lib/game-store";
@@ -255,7 +256,7 @@ export default function WorldGamePage() {
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       {/* Game header with prompt */}
-      <GameHeader onPause={handlePause} onEndGame={handleEndGame} onSkip={handleSkip} currentCountry={currentCountry ?? undefined} />
+      <GameHeader onPause={handlePause} onEndGame={handleEndGame} currentCountry={currentCountry ?? undefined} />
 
       {/* Map — fills all remaining height */}
       <div className="flex-1 relative overflow-hidden bg-[#0d1526] dark:bg-[#0d1526]">
@@ -263,6 +264,7 @@ export default function WorldGamePage() {
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
         />
+        <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 
         {/* Instruction hint */}
         {isStarted && !isComplete && (

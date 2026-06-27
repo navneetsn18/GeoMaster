@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from "next/image";
-import { Pause, Play, Flame, Target, Volume2, VolumeX, Flag, Volume1, SkipForward } from "lucide-react";
+import { Flame, Target, Volume2, VolumeX, Flag, Volume1 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "@/lib/game-store";
 import { soundManager } from "@/components/game/sound-manager";
@@ -13,7 +13,6 @@ import type { Country } from "@/types";
 interface GameHeaderProps {
   onPause: () => void;
   onEndGame?: () => void;
-  onSkip?: () => void;
   currentCountry?: Country;
   promptLabel?: string;
 }
@@ -24,19 +23,18 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptLabel = "Find this country" }: GameHeaderProps) {
+export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "Find this country" }: GameHeaderProps) {
   const {
     score, streak, countries, isPaused, isComplete, guessedCorrectly,
     timeRemainingSeconds, tickTimer,
   } = useGameStore();
 
-  const [sfxMuted, setSfxMuted] = useState(soundManager.muted);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const spokenCodeRef = useRef<string | null>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
-  // Pick the best available TTS voice
+  // Pick best available TTS voice — avoid robotic Microsoft voices
   useEffect(() => {
     if (typeof window === "undefined") return;
     const pickVoice = () => {
@@ -86,7 +84,6 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
     if (ttsEnabled) speak(currentCountry.name);
   }, [currentCountry?.code, isPaused, isComplete, ttsEnabled, speak]);
 
-  const handleSfxMute = () => setSfxMuted(soundManager.toggleMute());
   const handleTtsToggle = () => {
     if (isSpeaking) window.speechSynthesis?.cancel();
     setTtsEnabled(v => !v);
@@ -124,14 +121,14 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
             transition={{ duration: 0.18 }}
             className="flex items-center border-b border-border/30 px-3 sm:px-4 py-2"
           >
-            {/* Left: timer */}
-            <div className="w-14 sm:w-16 shrink-0">
+            {/* Left: timer — same width as right side for true centering */}
+            <div className="w-20 sm:w-24 shrink-0 flex items-center">
               <TimerDisplay small />
             </div>
 
-            {/* Center: prompt label + flag + name */}
-            <div className="flex-1 flex flex-col items-center text-center gap-0.5 min-w-0">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold leading-none">
+            {/* Center: label above, flag + name below */}
+            <div className="flex-1 flex flex-col items-center text-center gap-2 min-w-0">
+              <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-semibold leading-none">
                 {promptLabel}
               </span>
               <div className="flex items-center gap-2">
@@ -140,14 +137,14 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
                     <Image src={currentCountry.flagUrl} alt="" fill className="object-cover" unoptimized />
                   </div>
                 )}
-                <span className="text-base sm:text-xl font-extrabold tracking-tight truncate max-w-[180px] sm:max-w-xs">
+                <span className="text-base sm:text-2xl font-extrabold tracking-tight truncate max-w-[200px] sm:max-w-sm">
                   {currentCountry.name}
                 </span>
               </div>
             </div>
 
-            {/* Right: TTS + skip */}
-            <div className="w-14 sm:w-20 shrink-0 flex items-center justify-end gap-0.5">
+            {/* Right: TTS controls — same width as timer side */}
+            <div className="w-20 sm:w-24 shrink-0 flex items-center justify-end gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
@@ -166,17 +163,6 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
               >
                 {ttsEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </Button>
-              {onSkip && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-7 h-7 text-muted-foreground hover:text-yellow-400"
-                  onClick={onSkip}
-                  title="Skip this question"
-                >
-                  <SkipForward className="w-3.5 h-3.5" />
-                </Button>
-              )}
             </div>
           </motion.div>
         )}
@@ -197,17 +183,11 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={handleSfxMute} className="w-7 h-7 text-muted-foreground">
-              {sfxMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-            </Button>
             {onEndGame && (
               <Button variant="ghost" size="icon" onClick={onEndGame} className="w-7 h-7 text-red-400">
                 <Flag className="w-3.5 h-3.5" />
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={onPause} className="h-7 px-2 text-xs gap-1">
-              {isPaused ? <><Play className="w-3 h-3" />Go</> : <><Pause className="w-3 h-3" />Pause</>}
-            </Button>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full">
@@ -252,17 +232,11 @@ export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptL
         </div>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={handleSfxMute} title={sfxMuted ? "Unmute SFX" : "Mute SFX"} className="text-muted-foreground hover:text-foreground">
-            {sfxMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </Button>
           {onEndGame && (
             <Button variant="outline" size="sm" onClick={onEndGame} className="gap-1 text-xs">
               <Flag className="w-3.5 h-3.5" />End
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onPause} className="gap-1">
-            {isPaused ? <><Play className="w-3.5 h-3.5" />Resume</> : <><Pause className="w-3.5 h-3.5" />Pause</>}
-          </Button>
         </div>
       </div>
     </div>
