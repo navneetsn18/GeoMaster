@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getToken } from "@/lib/auth";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// Numeric IDs from world-atlas for random highlighting
 const COUNTRY_IDS = [
   "004","008","012","024","032","036","040","050","056","068","076","100","104","116",
   "120","124","144","152","156","170","178","192","203","208","218","231","246","250",
@@ -25,26 +23,55 @@ const FLOAT_COUNTRIES = [
   "🇫🇷 France +120", "🇧🇷 Brazil +95", "🇯🇵 Japan +110", "🇮🇳 India +130",
   "🇰🇪 Kenya +85", "🇦🇺 Australia +100", "🇲🇽 Mexico +90", "🇩🇪 Germany +115",
   "🇦🇷 Argentina +88", "🇳🇴 Norway +102", "🇨🇳 China +125", "🇵🇹 Portugal +95",
+  "🇺🇸 USA +140", "🇷🇺 Russia +108", "🇨🇦 Canada +112", "🇮🇹 Italy +98",
+  "🇪🇸 Spain +92", "🇬🇧 UK +118", "🇹🇷 Turkey +87", "🇿🇦 South Africa +96",
+  "🇳🇬 Nigeria +78", "🇪🇬 Egypt +84", "🇹🇭 Thailand +91", "🇰🇷 South Korea +105",
+  "🇵🇰 Pakistan +82", "🇸🇦 Saudi Arabia +93", "🇮🇩 Indonesia +89", "🇵🇭 Philippines +76",
+  "🇻🇳 Vietnam +83", "🇳🇿 New Zealand +101", "🇨🇭 Switzerland +116", "🇸🇪 Sweden +107",
+  "🇵🇱 Poland +88", "🇺🇦 Ukraine +79", "🇳🇱 Netherlands +103", "🇧🇪 Belgium +94",
+  "🇦🇹 Austria +98", "🇬🇷 Greece +86", "🇨🇿 Czechia +91", "🇭🇺 Hungary +77",
+  "🇷🇴 Romania +83", "🇨🇴 Colombia +89", "🇨🇱 Chile +94", "🇵🇪 Peru +81",
+  "🇲🇦 Morocco +86", "🇹🇳 Tunisia +80", "🇬🇭 Ghana +75", "🇸🇳 Senegal +72",
+  "🇱🇰 Sri Lanka +88", "🇧🇩 Bangladesh +79", "🇳🇵 Nepal +83", "🇲🇳 Mongolia +90",
+];
+
+const BUBBLE_COLORS = [
+  "bg-green-500/85 shadow-green-500/30",
+  "bg-indigo-500/85 shadow-indigo-500/30",
+  "bg-violet-500/85 shadow-violet-500/30",
+  "bg-sky-500/85 shadow-sky-500/30",
+  "bg-emerald-500/85 shadow-emerald-500/30",
+  "bg-teal-500/85 shadow-teal-500/30",
+];
+
+// Planes: dir 1 = left→right, -1 = right→left
+const PLANES = [
+  { id: 1, top: "12%",  dur: 18, delay: 0,  dir: 1,  size: 26, opacity: 0.65 },
+  { id: 2, top: "30%",  dur: 26, delay: 5,  dir: -1, size: 20, opacity: 0.45 },
+  { id: 3, top: "52%",  dur: 21, delay: 9,  dir: 1,  size: 30, opacity: 0.55 },
+  { id: 4, top: "68%",  dur: 32, delay: 2,  dir: -1, size: 18, opacity: 0.40 },
+  { id: 5, top: "22%",  dur: 24, delay: 14, dir: 1,  size: 22, opacity: 0.50 },
+  { id: 6, top: "78%",  dur: 28, delay: 7,  dir: -1, size: 24, opacity: 0.35 },
 ];
 
 const MODES = [
-  { emoji: "🌍", label: "World", sub: "All 195 countries", href: "/play/world", bg: "from-indigo-600 to-violet-600" },
-  { emoji: "🌍", label: "Africa", sub: "54 countries", href: "/play/continent/africa", bg: "from-orange-500 to-rose-600" },
-  { emoji: "🌏", label: "Asia", sub: "48 countries", href: "/play/continent/asia", bg: "from-emerald-500 to-teal-600" },
-  { emoji: "🌍", label: "Europe", sub: "44 countries", href: "/play/continent/europe", bg: "from-blue-500 to-cyan-600" },
-  { emoji: "🌎", label: "Americas", sub: "35 countries", href: "/play/continent/americas", bg: "from-yellow-500 to-orange-600" },
-  { emoji: "🇮🇳", label: "India States", sub: "36 states & UTs", href: "/play/india", bg: "from-orange-400 to-green-500" },
-  { emoji: "🏛️", label: "World Capitals", sub: "Name the capital city", href: "/play/world-capitals", bg: "from-purple-500 to-pink-600" },
-  { emoji: "🏛️", label: "India Capitals", sub: "State capital quiz", href: "/play/india-capitals", bg: "from-rose-500 to-purple-600" },
+  { emoji: "🌍", label: "World",          sub: "All 195 countries",    href: "/play/world",          bg: "from-indigo-600 to-violet-600" },
+  { emoji: "🌍", label: "Africa",         sub: "54 countries",          href: "/play/continent/africa", bg: "from-orange-500 to-rose-600" },
+  { emoji: "🌏", label: "Asia",           sub: "48 countries",          href: "/play/continent/asia",   bg: "from-emerald-500 to-teal-600" },
+  { emoji: "🌍", label: "Europe",         sub: "44 countries",          href: "/play/continent/europe", bg: "from-blue-500 to-cyan-600" },
+  { emoji: "🌎", label: "Americas",       sub: "35 countries",          href: "/play/continent/americas", bg: "from-yellow-500 to-orange-600" },
+  { emoji: "🇮🇳", label: "India States",  sub: "36 states & UTs",       href: "/play/india",            bg: "from-orange-400 to-green-500" },
+  { emoji: "🏛️", label: "World Capitals", sub: "Name the capital city", href: "/play/world-capitals",   bg: "from-purple-500 to-pink-600" },
+  { emoji: "🇮🇳", label: "India Capitals",sub: "State capital quiz",    href: "/play/india-capitals",   bg: "from-rose-500 to-purple-600" },
 ];
 
 const STEPS = [
-  { n: "01", title: "Pick a Mode", desc: "World, continents, India states or capitals — pick your poison." },
-  { n: "02", title: "Click the Map", desc: "See the country name, find it on the map. Faster = more points." },
-  { n: "03", title: "Flex on Friends", desc: "Climb leaderboards. Follow rivals. Become the geography king." },
+  { n: "01", title: "Pick a Mode",    desc: "World, continents, India states or capitals — pick your poison." },
+  { n: "02", title: "Click the Map",  desc: "See the country name, find it on the map. Faster = more points." },
+  { n: "03", title: "Flex on Friends",desc: "Climb leaderboards. Follow rivals. Become the geography king." },
 ];
 
-interface FloatItem { id: number; text: string; x: number; }
+interface BubbleItem { id: number; text: string; x: number; bottom: number; color: string; }
 
 function AnimatedMap() {
   const [lit, setLit] = useState<Set<string>>(new Set());
@@ -52,7 +79,7 @@ function AnimatedMap() {
   useEffect(() => {
     const flash = () => {
       const picks = new Set<string>();
-      const count = 6 + Math.floor(Math.random() * 6);
+      const count = 8 + Math.floor(Math.random() * 8);
       while (picks.size < count) picks.add(COUNTRY_IDS[Math.floor(Math.random() * COUNTRY_IDS.length)]);
       setLit(picks);
     };
@@ -63,7 +90,9 @@ function AnimatedMap() {
 
   return (
     <ComposableMap
-      projectionConfig={{ scale: 155, center: [10, 10] }}
+      width={980}
+      height={520}
+      projectionConfig={{ scale: 175, center: [10, 15] }}
       style={{ width: "100%", height: "100%" }}
     >
       <Geographies geography={GEO_URL}>
@@ -76,14 +105,14 @@ function AnimatedMap() {
                 geography={geo}
                 style={{
                   default: {
-                    fill: isLit ? "#22c55e" : "#1e2d4a",
-                    stroke: "#0d1526",
-                    strokeWidth: 0.5,
+                    fill: isLit ? "#22c55e" : "#1a2d4e",
+                    stroke: "#080f1e",
+                    strokeWidth: 0.6,
                     outline: "none",
                     transition: "fill 0.4s ease",
                   },
-                  hover: { fill: "#1e2d4a", outline: "none" },
-                  pressed: { fill: "#1e2d4a", outline: "none" },
+                  hover:   { fill: "#1a2d4e", outline: "none" },
+                  pressed: { fill: "#1a2d4e", outline: "none" },
                 }}
               />
             );
@@ -94,16 +123,25 @@ function AnimatedMap() {
   );
 }
 
-function FloatingScores() {
-  const [items, setItems] = useState<FloatItem[]>([]);
+function FloatingBubbles() {
+  const [items, setItems] = useState<BubbleItem[]>([]);
   const counter = useRef(0);
 
   useEffect(() => {
+    const spawn = () => ({
+      id: counter.current++,
+      text: FLOAT_COUNTRIES[Math.floor(Math.random() * FLOAT_COUNTRIES.length)],
+      x: 4 + Math.random() * 88,
+      bottom: 5 + Math.random() * 70,
+      color: BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)],
+    });
+
+    // Pre-populate so screen isn't empty on load
+    setItems(Array.from({ length: 8 }, spawn));
+
     const id = setInterval(() => {
-      const text = FLOAT_COUNTRIES[Math.floor(Math.random() * FLOAT_COUNTRIES.length)];
-      const x = 10 + Math.random() * 80;
-      setItems(prev => [...prev.slice(-6), { id: counter.current++, text, x }]);
-    }, 1800);
+      setItems(prev => [...prev.slice(-18), spawn()]);
+    }, 700);
     return () => clearInterval(id);
   }, []);
 
@@ -113,16 +151,41 @@ function FloatingScores() {
         {items.map(item => (
           <motion.div
             key={item.id}
-            initial={{ opacity: 0, y: 0, scale: 0.8 }}
-            animate={{ opacity: [0, 1, 1, 0], y: -120, scale: 1 }}
-            transition={{ duration: 2.5, ease: "easeOut" }}
-            style={{ left: `${item.x}%`, bottom: "20%" }}
-            className="absolute bg-green-500/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-green-500/30 whitespace-nowrap"
+            initial={{ opacity: 0, y: 0, scale: 0.6 }}
+            animate={{ opacity: [0, 1, 1, 0], y: -160, scale: 1 }}
+            transition={{ duration: 3.2, ease: "easeOut" }}
+            style={{ left: `${item.x}%`, bottom: `${item.bottom}%` }}
+            className={`absolute ${item.color} shadow-lg backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap`}
           >
             {item.text}
           </motion.div>
         ))}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function FlyingPlanes() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {PLANES.map(p => (
+        <motion.div
+          key={p.id}
+          initial={{ x: p.dir === 1 ? "-80px" : "110vw" }}
+          animate={{ x: p.dir === 1 ? "110vw" : "-80px" }}
+          transition={{ duration: p.dur, delay: p.delay, repeat: Infinity, ease: "linear", repeatDelay: 6 }}
+          style={{
+            position: "absolute",
+            top: p.top,
+            opacity: p.opacity,
+            fontSize: p.size,
+            transform: p.dir === -1 ? "scaleX(-1)" : undefined,
+            filter: "drop-shadow(0 0 8px rgba(255,255,255,0.3))",
+          }}
+        >
+          ✈️
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -134,12 +197,12 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 
   useEffect(() => {
     if (!inView) return;
-    let start = 0;
+    let cur = 0;
     const step = Math.ceil(target / 40);
     const id = setInterval(() => {
-      start += step;
-      if (start >= target) { setVal(target); clearInterval(id); }
-      else setVal(start);
+      cur += step;
+      if (cur >= target) { setVal(target); clearInterval(id); }
+      else setVal(cur);
     }, 30);
     return () => clearInterval(id);
   }, [inView, target]);
@@ -150,7 +213,6 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 export default function LandingPage() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
-  const modesRef = useRef(null);
 
   useEffect(() => {
     if (getToken()) router.replace("/dashboard");
@@ -169,17 +231,20 @@ export default function LandingPage() {
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
 
-        {/* Map fills full background */}
-        <div className="absolute inset-0 opacity-80">
+        {/* Map bleeds to all edges */}
+        <div className="absolute inset-0" style={{ margin: "-2px" }}>
           <AnimatedMap />
         </div>
 
-        {/* Dark vignette overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#080f1e]/60 via-transparent to-[#080f1e]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#080f1e]/40 via-transparent to-[#080f1e]/40" />
+        {/* Vignette — stronger on sides so text pops */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#080f1e]/70 via-[#080f1e]/20 to-[#080f1e]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#080f1e]/60 via-transparent to-[#080f1e]/60" />
 
-        {/* Floating score popups */}
-        <FloatingScores />
+        {/* Floating country score bubbles */}
+        <FloatingBubbles />
+
+        {/* Flying planes */}
+        <FlyingPlanes />
 
         {/* Hero content */}
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -187,7 +252,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="text-7xl mb-6 inline-block"
+            className="text-7xl mb-6 inline-block select-none"
           >
             🌍
           </motion.div>
@@ -199,10 +264,8 @@ export default function LandingPage() {
             className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-6"
           >
             How well do you{" "}
-            <span className="relative inline-block">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
-                know
-              </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
+              know
             </span>
             <br />the world?
           </motion.h1>
@@ -225,7 +288,7 @@ export default function LandingPage() {
           >
             <Link href="/signup">
               <motion.button
-                whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(34,197,94,0.4)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(34,197,94,0.45)" }}
                 whileTap={{ scale: 0.97 }}
                 className="bg-green-500 hover:bg-green-400 text-black font-black text-lg px-10 py-4 rounded-2xl flex items-center gap-2 transition-colors"
               >
@@ -263,10 +326,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { n: 195, s: "", label: "Countries", emoji: "🌍" },
-              { n: 8, s: "", label: "Game Modes", emoji: "🎮" },
-              { n: 36, s: "", label: "India States & UTs", emoji: "🇮🇳" },
-              { n: 100, s: "%", label: "Free to Play", emoji: "🔥" },
+              { n: 195, s: "",  label: "Countries",        emoji: "🌍" },
+              { n: 8,   s: "",  label: "Game Modes",       emoji: "🎮" },
+              { n: 36,  s: "",  label: "India States & UTs", emoji: "🇮🇳" },
+              { n: 100, s: "%", label: "Free to Play",     emoji: "🔥" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -288,7 +351,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── MODES ─────────────────────────────────────────────────── */}
-      <section ref={modesRef} className="py-24 px-4">
+      <section className="py-24 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -315,7 +378,6 @@ export default function LandingPage() {
                     whileTap={{ scale: 0.97 }}
                     className={`relative overflow-hidden rounded-2xl p-6 h-44 flex flex-col justify-between cursor-pointer bg-gradient-to-br ${mode.bg} shadow-xl`}
                   >
-                    {/* Shine effect */}
                     <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
                     <span className="text-4xl">{mode.emoji}</span>
                     <div>
@@ -399,7 +461,6 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-white/10 py-8 text-center text-white/30 text-sm">
         <p>GeoMaster © 2026 — Learn the world, one click at a time.</p>
       </footer>
