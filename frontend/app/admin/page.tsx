@@ -131,7 +131,7 @@ export default function AdminPage() {
             { label: "Completed", value: stats.completedGames, icon: Trophy },
             { label: "Active Now", value: stats.activeSessions, icon: Activity },
             { label: "Hours Played", value: stats.totalHoursPlayed.toFixed(1), icon: Clock },
-            { label: "Banned", value: stats.bannedUsers, icon: ShieldBan },
+            { label: "Banned", value: users.filter(u => u.banned).length, icon: ShieldBan },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
               <Icon className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
