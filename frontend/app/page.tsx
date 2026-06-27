@@ -243,14 +243,14 @@ function AnimatedMap() {
                 geography={geo}
                 style={{
                   default: {
-                    fill: isLit ? "rgba(34,197,94,0.55)" : "rgba(20,40,80,0.38)",
-                    stroke: "rgba(255,255,255,0.07)",
-                    strokeWidth: 0.5,
+                    fill: isLit ? "rgba(34,197,94,0.88)" : "rgba(15,35,72,0.78)",
+                    stroke: "rgba(255,255,255,0.13)",
+                    strokeWidth: 0.6,
                     outline: "none",
                     transition: "fill 0.5s ease",
                   },
-                  hover:   { fill: "rgba(20,40,80,0.38)", outline: "none" },
-                  pressed: { fill: "rgba(20,40,80,0.38)", outline: "none" },
+                  hover:   { fill: "rgba(15,35,72,0.78)", outline: "none" },
+                  pressed: { fill: "rgba(15,35,72,0.78)", outline: "none" },
                 }}
               />
             );
@@ -344,13 +344,16 @@ export default function LandingPage() {
       {/* ── HERO ──────────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
 
-        {/* Translucent map — Aurora shows through the gaps */}
+        {/* Layer 1: dim Aurora to ~20% so it peeks through map gaps only */}
+        <div className="absolute inset-0 bg-[#07101f]/80" />
+
+        {/* Layer 2: map — opaque countries sit visually in front of Aurora */}
         <div className="absolute inset-0" style={{ margin: "-2px" }}>
           <AnimatedMap />
         </div>
 
-        {/* Soft vignette — dark at edges, open in center for aurora */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-black/75" />
+        {/* Layer 3: soft vignette for depth */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/80" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
 
         {/* Country score bubbles */}
