@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, AlertCircle, ArrowLeft, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { IndiaMap } from "@/components/game/india-map";
@@ -271,6 +271,23 @@ export default function IndiaStatesPage() {
             Click state on map • Scroll to zoom
           </div>
         )}
+
+        {/* Guess processing indicator */}
+        <AnimatePresence>
+          {isGuessing && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none"
+            >
+              <div className="bg-background/90 backdrop-blur-sm border border-primary/40 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl">
+                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                <span className="text-sm font-medium text-primary">Registering…</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {isPaused && (

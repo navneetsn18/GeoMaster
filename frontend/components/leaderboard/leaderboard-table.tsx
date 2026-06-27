@@ -1,9 +1,10 @@
 "use client";
 
-import { Trophy, Medal } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatScore, formatAccuracy, formatDate, getRankBadgeColor } from "@/lib/utils";
 import { getStoredUser } from "@/lib/auth";
+import { getAvatarUrl } from "@/lib/avatar";
 import type { LeaderboardEntry } from "@/types";
 
 interface LeaderboardTableProps {
@@ -99,16 +100,14 @@ export function LeaderboardTable({
                 </td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
-                    <div
+                    <img
+                      src={getAvatarUrl(entry.userId, entry.avatarUrl)}
+                      alt=""
                       className={cn(
-                        "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                        isMe
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                        "w-7 h-7 rounded-full shrink-0 object-cover",
+                        isMe && "ring-2 ring-primary"
                       )}
-                    >
-                      {entry.username[0].toUpperCase()}
-                    </div>
+                    />
                     <span className={cn("font-medium", isMe && "text-primary")}>
                       {entry.username}
                     </span>

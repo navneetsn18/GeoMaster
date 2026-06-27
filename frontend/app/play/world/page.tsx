@@ -271,6 +271,23 @@ export default function WorldGamePage() {
           </div>
         )}
 
+        {/* Guess processing indicator */}
+        <AnimatePresence>
+          {isGuessing && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none"
+            >
+              <div className="bg-background/90 backdrop-blur-sm border border-primary/40 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl">
+                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                <span className="text-sm font-medium text-primary">Registering…</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Pause overlay */}
         <AnimatePresence>
           {isPaused && (

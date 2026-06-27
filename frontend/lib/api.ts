@@ -220,6 +220,9 @@ export interface AdminUser {
   banned: boolean;
   banReason?: string;
   bannedAt?: string;
+  bestScore?: number;
+  avgAccuracy?: number;
+  bestStreak?: number;
 }
 
 export const adminApi = {

@@ -8,6 +8,7 @@ import {
   Users, Trophy, Clock, Activity, ShieldBan, ShieldCheck,
   Trash2, Gamepad2, BarChart3, AlertTriangle
 } from "lucide-react";
+import { getAvatarUrl } from "@/lib/avatar";
 
 const ADMIN_EMAIL = "navneetsn18@gmail.com";
 
@@ -148,6 +149,9 @@ export default function AdminPage() {
                   <th className="text-left p-3 font-medium">User</th>
                   <th className="text-left p-3 font-medium">Email</th>
                   <th className="text-center p-3 font-medium">Games</th>
+                  <th className="text-center p-3 font-medium hidden md:table-cell">Best Score</th>
+                  <th className="text-center p-3 font-medium hidden md:table-cell">Accuracy</th>
+                  <th className="text-center p-3 font-medium hidden md:table-cell">Streak</th>
                   <th className="text-center p-3 font-medium">Status</th>
                   <th className="text-center p-3 font-medium">Actions</th>
                 </tr>
@@ -158,15 +162,18 @@ export default function AdminPage() {
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <img
-                          src={u.avatarUrl ? `http://localhost:8080${u.avatarUrl}` : `https://api.dicebear.com/7.x/bottts/svg?seed=${u.id}`}
+                          src={getAvatarUrl(u.id, u.avatarUrl)}
                           alt=""
-                          className="w-7 h-7 rounded-full bg-muted"
+                          className="w-7 h-7 rounded-full bg-muted object-cover"
                         />
                         <span className="font-medium">{u.username}</span>
                       </div>
                     </td>
                     <td className="p-3 text-muted-foreground">{u.email}</td>
                     <td className="p-3 text-center">{u.gamesPlayed}</td>
+                    <td className="p-3 text-center hidden md:table-cell text-yellow-400 font-semibold">{u.bestScore?.toLocaleString() ?? "—"}</td>
+                    <td className="p-3 text-center hidden md:table-cell text-green-400">{u.avgAccuracy != null ? `${u.avgAccuracy.toFixed(1)}%` : "—"}</td>
+                    <td className="p-3 text-center hidden md:table-cell text-orange-400">{u.bestStreak ?? "—"}x</td>
                     <td className="p-3 text-center">
                       {u.banned ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-medium" title={u.banReason}>

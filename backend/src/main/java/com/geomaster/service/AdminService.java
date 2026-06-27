@@ -54,6 +54,9 @@ public class AdminService {
         private boolean banned;
         private String banReason;
         private String bannedAt;
+        private Integer bestScore;
+        private Double avgAccuracy;
+        private Integer bestStreak;
     }
 
     @Transactional(readOnly = true)
@@ -92,6 +95,9 @@ public class AdminService {
                         .banned(u.isBanned())
                         .banReason(u.getBanReason())
                         .bannedAt(u.getBannedAt() != null ? u.getBannedAt().toString() : null)
+                        .bestScore(gameSessionRepository.findBestScoreByUserId(u.getId()).orElse(0))
+                        .avgAccuracy(gameSessionRepository.findAvgAccuracyByUserId(u.getId()).orElse(0.0) * 100.0)
+                        .bestStreak(gameSessionRepository.findBestStreakByUserId(u.getId()).orElse(0))
                         .build())
                 .toList();
     }
