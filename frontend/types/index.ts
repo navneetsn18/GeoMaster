@@ -186,7 +186,7 @@ export const GAME_MODES: GameMode[] = [
   {
     id: "INDIA_CAPITALS",
     label: "India Capitals",
-    emoji: "🏛️",
+    emoji: "🇮🇳",
     description: "Capitals of 36 states & UTs",
     totalCountries: 36,
     href: "/play/india-capitals",
