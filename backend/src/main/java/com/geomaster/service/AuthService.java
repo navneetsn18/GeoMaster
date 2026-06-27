@@ -4,8 +4,10 @@ import com.geomaster.dto.request.LoginRequest;
 import com.geomaster.dto.request.RegisterRequest;
 import com.geomaster.dto.response.AuthResponse;
 import com.geomaster.dto.response.UserDto;
+import com.geomaster.exception.BadRequestException;
 import com.geomaster.exception.DuplicateEmailException;
 import com.geomaster.exception.DuplicateUsernameException;
+import com.geomaster.util.ProfanityFilter;
 import com.geomaster.model.User;
 import com.geomaster.repository.UserRepository;
 import com.geomaster.security.JwtTokenProvider;
@@ -28,6 +30,12 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (ProfanityFilter.isUsernameBlocked(request.getUsername())) {
+            throw new BadRequestException("Username contains inappropriate content");
+        }
+        if (ProfanityFilter.isEmailBlocked(request.getEmail())) {
+            throw new BadRequestException("Email address contains inappropriate content");
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException(request.getEmail());
         }
