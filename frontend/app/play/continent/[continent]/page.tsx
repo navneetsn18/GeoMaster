@@ -180,7 +180,7 @@ export default function ContinentGamePage() {
 
   if (isInitializing) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center gap-4">
+      <div className="flex min-h-screen items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
         <p className="text-muted-foreground">Loading {continent} game…</p>
       </div>
@@ -189,7 +189,7 @@ export default function ContinentGamePage() {
 
   if (initError) {
     return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)] items-center justify-center gap-4 p-8">
+      <div className="flex flex-col min-h-screen items-center justify-center gap-4 p-8">
         <AlertCircle className="w-12 h-12 text-destructive" />
         <p className="text-muted-foreground">{initError}</p>
         <div className="flex gap-3">
@@ -205,7 +205,7 @@ export default function ContinentGamePage() {
   const currentCountry = countries[currentCountryIndex];
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
+    <div className="flex flex-col" style={{ height: "100vh" }}>
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
         currentCountry={currentCountry ?? undefined}

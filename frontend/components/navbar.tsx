@@ -52,6 +52,8 @@ export default function Navbar() {
 
   const isGamePage = pathname?.startsWith("/play/");
 
+  if (isGamePage) return null;
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/30 bg-background/40 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">

@@ -126,11 +126,16 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
               <TimerDisplay small />
             </div>
 
-            {/* Center: label above, flag + name below */}
+            {/* Center: label + count above, flag + name below */}
             <div className="flex-1 flex flex-col items-center text-center gap-2 min-w-0">
-              <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-semibold leading-none">
-                {promptLabel}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-semibold leading-none">
+                  {promptLabel}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground/60 font-medium leading-none">
+                  {correctCount + 1}/{totalCount}
+                </span>
+              </div>
               <div className="flex items-center gap-2">
                 {currentCountry.flagUrl && (
                   <div className="relative w-7 h-5 sm:w-8 sm:h-6 rounded overflow-hidden border border-border/40 shrink-0">
