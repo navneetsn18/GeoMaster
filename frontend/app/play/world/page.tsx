@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
-import { CountryPrompt } from "@/components/game/country-prompt";
 import { ScoreModal } from "@/components/game/score-modal";
 import { Button } from "@/components/ui/button";
 
@@ -229,12 +228,12 @@ export default function WorldGamePage() {
   }
 
   const currentCountry = countries[currentCountryIndex];
-  const totalRemaining = countries.length - currentCountryIndex;
+
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
-      {/* Game header */}
-      <GameHeader onPause={handlePause} onEndGame={handleEndGame} />
+      {/* Game header with prompt */}
+      <GameHeader onPause={handlePause} onEndGame={handleEndGame} currentCountry={currentCountry ?? undefined} />
 
       {/* Map — fills all remaining height */}
       <div className="flex-1 relative overflow-hidden bg-[#0d1526] dark:bg-[#0d1526]">
@@ -242,27 +241,6 @@ export default function WorldGamePage() {
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
         />
-
-        {/* Country prompt overlaid top-center of map */}
-        <AnimatePresence>
-          {currentCountry && !isComplete && (
-            <motion.div
-              key="prompt-overlay"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            >
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl px-6 py-3">
-                <CountryPrompt
-                  country={currentCountry}
-                  totalRemaining={totalRemaining}
-                  totalCountries={countries.length}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Instruction hint */}
         {isStarted && !isComplete && (

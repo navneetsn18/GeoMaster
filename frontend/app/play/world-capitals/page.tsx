@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
-import { CountryPrompt } from "@/components/game/country-prompt";
 import { ScoreModal } from "@/components/game/score-modal";
 import { Button } from "@/components/ui/button";
 
@@ -189,38 +188,22 @@ export default function WorldCapitalsPage() {
   }
 
   const currentCountry = countries[currentCountryIndex];
-  const totalRemaining = countries.length - currentCountryIndex;
+
 
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
-      <GameHeader onPause={() => (isPaused ? resumeGame() : pauseGame())} onEndGame={handleEndGame} />
+      <GameHeader
+        onPause={() => (isPaused ? resumeGame() : pauseGame())}
+        onEndGame={handleEndGame}
+        currentCountry={currentCountry ?? undefined}
+        promptLabel="Whose capital is"
+      />
 
       <div className="flex-1 relative overflow-hidden bg-[#0d1526]">
         <WorldMap
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
         />
-
-        <AnimatePresence>
-          {currentCountry && !isComplete && (
-            <motion.div
-              key="prompt-overlay"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            >
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl px-6 py-3">
-                <CountryPrompt
-                  country={currentCountry}
-                  totalRemaining={totalRemaining}
-                  totalCountries={countries.length}
-                  promptLabel="Whose capital is:"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {isStarted && !isComplete && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-muted-foreground pointer-events-none">

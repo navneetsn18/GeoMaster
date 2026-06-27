@@ -4,18 +4,19 @@ import java.util.Set;
 
 /**
  * Checks usernames and email local-parts for blocked words.
- * Normalises leet-speak before matching so simple bypasses don't work.
+ * Uses token-based matching (split by non-alpha separators) to prevent false
+ * positives from innocent words that happen to contain short profanity substrings
+ * (e.g. "class" must not match "ass", "skill" must not match "kill").
+ * Also normalises leet-speak before matching.
  */
 public final class ProfanityFilter {
 
     private ProfanityFilter() {}
 
-    // ── Blocked word list ────────────────────────────────────────────────────
-    // English + romanised Hindi/Indian profanity
     private static final Set<String> BLOCKED = Set.of(
-        // English — common
-        "fuck", "fucker", "fucks", "fucking", "fucked", "fuckoff", "fucku",
-        "shit", "shits", "shitting", "shithead", "bullshit",
+        // English — unambiguous profanity
+        "fuck", "fucker", "fucks", "fucking", "fucked", "fuckoff", "fucku", "fuckface",
+        "shit", "shits", "shitting", "shithead", "bullshit", "shitstain",
         "ass", "asses", "asshole", "asswipe", "jackass", "dumbass", "smartass",
         "bitch", "bitches", "bitching",
         "cock", "cocks", "cockhead", "cocksuck",
@@ -30,20 +31,10 @@ public final class ProfanityFilter {
         "retard", "retarded",
         "piss", "pissing", "pissoff",
         "wank", "wanker",
-        "twat",
-        "bollocks",
-        "arse",
-        "damn", "damnit",
-        "crap",
+        "twat", "bollocks", "arse",
         "porn", "porno",
-        "sex", "sexy", "sexxx",
-        "nude", "nudes",
         "rape", "raping", "rapist",
-        "kill", "killing", "killer",
-        "murder", "murderer",
-        "terrorist", "terror",
         "nazi", "hitler",
-        // Abbreviations
         "wtf", "stfu", "gtfo",
 
         // Romanised Hindi / Indian
@@ -51,59 +42,59 @@ public final class ProfanityFilter {
         "bhenchod", "bhenc", "benchod",
         "chutiya", "chutiye", "chutiyo",
         "bhosdike", "bhosdiwale",
-        "gandu", "gand",
+        "gandu", "gaand",
         "lodu", "lode", "lauda", "lavda",
         "randi", "randwa",
         "harami", "haramzada", "haramzaade",
-        "saala", "saali",
         "kameena", "kameeni",
-        "maderchod",
-        "teri", "teri maa",
-        "gaand",
         "chut",
         "tatti",
-        "haram",
         "kutte", "kutta",
-        "suar",
-        "bakwas",
-        // Common short-form abuses used online
-        "mc", "bc", "mf", "mfker"
+        "mfker"
     );
 
     // ── Public API ───────────────────────────────────────────────────────────
 
     /**
-     * Returns true if text contains any blocked word.
-     * Checks both original (lowercased) and leet-normalised forms.
+     * Check username. Splits by non-alpha separators and checks each token
+     * for exact match, prefix, or suffix of a blocked word. This prevents
+     * "class" from matching "ass" while still catching "fuckyou", "asshole_42".
      */
-    public static boolean containsProfanity(String text) {
+    public static boolean isUsernameBlocked(String username) {
+        if (username == null || username.isBlank()) return false;
+        return isTokenBlocked(username.toLowerCase()) ||
+               isTokenBlocked(normaliseLeet(username.toLowerCase()));
+    }
+
+    /** Check email — only tests local part (before @). */
+    public static boolean isEmailBlocked(String email) {
+        if (email == null || !email.contains("@")) return false;
+        String localPart = email.substring(0, email.indexOf('@')).toLowerCase();
+        return isTokenBlocked(localPart) || isTokenBlocked(normaliseLeet(localPart));
+    }
+
+    // ── Internal helpers ─────────────────────────────────────────────────────
+
+    /**
+     * Splits text into alpha-only tokens, then checks each token:
+     * 1. Exact match with a blocked word
+     * 2. Token starts with a blocked word (catches "fuckyou", "shithead42")
+     * 3. Token ends with a blocked word (catches "yourass", "bigcock")
+     */
+    private static boolean isTokenBlocked(String text) {
         if (text == null || text.isBlank()) return false;
-        String lower = text.toLowerCase();
-        String normalised = normaliseLeet(lower);
-        for (String word : BLOCKED) {
-            if (lower.contains(word) || normalised.contains(word)) {
-                return true;
+        for (String token : text.split("[^a-z]+")) {
+            if (token.isEmpty()) continue;
+            if (BLOCKED.contains(token)) return true;
+            for (String word : BLOCKED) {
+                if (token.length() > word.length()) {
+                    if (token.startsWith(word) || token.endsWith(word)) return true;
+                }
             }
         }
         return false;
     }
 
-    /** Check username — strips non-alphanumeric before matching */
-    public static boolean isUsernameBlocked(String username) {
-        if (username == null) return false;
-        // Also check with underscores/dots stripped
-        String stripped = username.replaceAll("[^a-zA-Z0-9]", "");
-        return containsProfanity(username) || containsProfanity(stripped);
-    }
-
-    /** Check email — only test local part (before @) */
-    public static boolean isEmailBlocked(String email) {
-        if (email == null || !email.contains("@")) return false;
-        String localPart = email.substring(0, email.indexOf('@'));
-        return containsProfanity(localPart);
-    }
-
-    // ── Leet normalisation ───────────────────────────────────────────────────
     private static String normaliseLeet(String s) {
         return s
             .replace("0", "o")

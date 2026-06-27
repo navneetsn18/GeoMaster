@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { WorldMap } from "@/components/game/world-map";
 import { GameHeader } from "@/components/game/game-header";
-import { CountryPrompt } from "@/components/game/country-prompt";
 import { ScoreModal } from "@/components/game/score-modal";
 import { Button } from "@/components/ui/button";
 
@@ -190,6 +189,7 @@ export default function ContinentGamePage() {
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
+        currentCountry={currentCountry ?? undefined}
         onEndGame={async () => {
           if (!sessionId || isComplete) return;
           try {
@@ -217,27 +217,6 @@ export default function ContinentGamePage() {
           disabled={isGuessing || isPaused || isComplete}
           filterCodes={new Set(countries.map((c) => c.code.toLowerCase()))}
         />
-
-        {/* Country prompt overlaid top-center */}
-        <AnimatePresence>
-          {currentCountry && !isComplete && (
-            <motion.div
-              key="prompt-overlay"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            >
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl px-6 py-3">
-                <CountryPrompt
-                  country={currentCountry}
-                  totalRemaining={countries.length - currentCountryIndex}
-                  totalCountries={countries.length}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {!isComplete && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-muted-foreground pointer-events-none">

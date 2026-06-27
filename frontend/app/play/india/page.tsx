@@ -6,10 +6,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Loader2, AlertCircle, ArrowLeft, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
 import { IndiaMap } from "@/components/game/india-map";
 import { GameHeader } from "@/components/game/game-header";
-import { CountryPrompt } from "@/components/game/country-prompt";
 import { ScoreModal } from "@/components/game/score-modal";
 import { Button } from "@/components/ui/button";
 
@@ -203,6 +201,8 @@ export default function IndiaStatesPage() {
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
         onEndGame={handleEndGame}
+        currentCountry={currentCountry ?? undefined}
+        promptLabel="Find this state"
       />
 
       {/* Map fills all remaining height */}
@@ -214,27 +214,6 @@ export default function IndiaStatesPage() {
           wrongGuesses={wrongGuesses}
           targetCode={currentCountry?.code.toLowerCase()}
         />
-
-        {/* Country prompt overlaid top-center */}
-        <AnimatePresence>
-          {currentCountry && !isComplete && (
-            <motion.div
-              key="prompt-overlay"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            >
-              <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl px-6 py-3">
-                <CountryPrompt
-                  country={currentCountry}
-                  totalRemaining={totalRemaining}
-                  totalCountries={countries.length}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Small territories panel — bottom-left */}
         {!isComplete && smallUTs.length > 0 && (
