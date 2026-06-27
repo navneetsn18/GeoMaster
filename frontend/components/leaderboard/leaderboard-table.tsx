@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatScore, formatAccuracy, formatDate, getRankBadgeColor } from "@/lib/utils";
 import { getStoredUser } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/avatar";
+import { ShareEntryButton } from "@/components/game/share-card";
 import type { LeaderboardEntry } from "@/types";
 
 interface LeaderboardTableProps {
@@ -80,6 +81,7 @@ export function LeaderboardTable({
             <th className="py-3 px-4 font-medium text-muted-foreground text-right hidden md:table-cell">
               Date
             </th>
+            <th className="py-3 px-2 w-8" />
           </tr>
         </thead>
         <tbody>
@@ -136,6 +138,9 @@ export function LeaderboardTable({
                 </td>
                 <td className="py-3 px-4 text-right text-muted-foreground hidden md:table-cell">
                   {formatDate(entry.date)}
+                </td>
+                <td className="py-3 px-2 text-right">
+                  <ShareEntryButton entry={entry} />
                 </td>
               </tr>
             );

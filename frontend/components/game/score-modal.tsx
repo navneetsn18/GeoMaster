@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useGameStore } from "@/lib/game-store";
 import { formatScore, formatAccuracy, formatDuration } from "@/lib/utils";
+import { ShareScoreButton } from "@/components/game/share-card";
 
 interface ScoreModalProps {
   open: boolean;
@@ -113,6 +114,7 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
+          <ShareScoreButton className="w-full" />
           <Button className="w-full" onClick={onPlayAgain} size="lg">
             <RotateCcw className="w-4 h-4 mr-2" />
             Play Again

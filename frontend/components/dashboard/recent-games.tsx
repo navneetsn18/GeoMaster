@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { userApi } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import { formatDate, formatAccuracy, formatScore } from "@/lib/utils";
+import { ShareGameButton } from "@/components/game/share-card";
 import type { RecentGame } from "@/types";
 import { History } from "lucide-react";
 
@@ -32,6 +34,8 @@ export function RecentGames() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  const user = getStoredUser();
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -44,10 +48,7 @@ export function RecentGames() {
         {isLoading ? (
           <div className="p-6 space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-10 rounded-md bg-muted animate-pulse"
-              />
+              <div key={i} className="h-10 rounded-md bg-muted animate-pulse" />
             ))}
           </div>
         ) : games.length === 0 ? (
@@ -59,26 +60,16 @@ export function RecentGames() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">
-                    Mode
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                    Score
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">
-                    Accuracy
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground hidden sm:table-cell">
-                    Date
-                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Mode</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Score</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Accuracy</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground hidden sm:table-cell">Date</th>
+                  <th className="py-3 px-2 w-8" />
                 </tr>
               </thead>
               <tbody>
                 {games.map((game) => (
-                  <tr
-                    key={game.sessionId}
-                    className="border-b border-border/50 hover:bg-muted/40 transition-colors"
-                  >
+                  <tr key={game.sessionId} className="border-b border-border/50 hover:bg-muted/40 transition-colors">
                     <td className="py-3 px-4">
                       <Badge variant="secondary" className="font-normal">
                         {MAP_TYPE_LABELS[game.mapType] ?? game.mapType}
@@ -88,20 +79,26 @@ export function RecentGames() {
                       {formatScore(game.score)}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <span
-                        className={
-                          game.accuracy >= 70
-                            ? "text-green-400"
-                            : game.accuracy >= 40
-                            ? "text-yellow-400"
-                            : "text-red-400"
-                        }
-                      >
+                      <span className={
+                        game.accuracy >= 70 ? "text-green-400"
+                          : game.accuracy >= 40 ? "text-yellow-400"
+                          : "text-red-400"
+                      }>
                         {formatAccuracy(game.accuracy)}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right text-muted-foreground hidden sm:table-cell">
                       {formatDate(game.playedAt)}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      {user && (
+                        <ShareGameButton
+                          game={game}
+                          username={user.username}
+                          userId={user.id}
+                          avatarUrl={user.avatarUrl}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}

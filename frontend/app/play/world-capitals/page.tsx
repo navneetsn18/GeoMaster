@@ -140,6 +140,24 @@ export default function WorldCapitalsPage() {
     ]
   );
 
+  const handleSkip = useCallback(async () => {
+    if (!sessionId || isGuessing || isPaused || isComplete) return;
+    const currentCountry = countries[currentCountryIndex];
+    if (!currentCountry) return;
+    setIsGuessing(true);
+    soundManager.playWrong();
+    try {
+      const result = await gameApi.submitGuess(sessionId, { countryCode: currentCountry.code, isCorrect: false, timeTakenMs: countryStartTime ? Date.now() - countryStartTime : 0 });
+      submitGuess("__skip__", result);
+      setTimeout(async () => {
+        if (currentCountryIndex + 1 >= countries.length) {
+          try { completeGame(await gameApi.completeSession(sessionId)); } catch { completeGame({ sessionId, score: result.totalScore, accuracy: (guessedCorrectly.size / countries.length) * 100, correctCount: guessedCorrectly.size, totalCount: countries.length, bestStreak: result.currentStreak, timeTaken: 0, newPersonalBest: false }); }
+        } else { nextCountry(); soundManager.playBeep(); }
+        setIsGuessing(false);
+      }, 300);
+    } catch { setIsGuessing(false); }
+  }, [sessionId, isGuessing, isPaused, isComplete, countries, currentCountryIndex, countryStartTime, guessedCorrectly, submitGuess, nextCountry, completeGame]);
+
   const handleEndGame = async () => {
     if (!sessionId || isComplete) return;
     try {
@@ -195,6 +213,7 @@ export default function WorldCapitalsPage() {
       <GameHeader
         onPause={() => (isPaused ? resumeGame() : pauseGame())}
         onEndGame={handleEndGame}
+        onSkip={handleSkip}
         currentCountry={currentCountry ?? undefined}
         promptLabel="Whose capital is"
       />

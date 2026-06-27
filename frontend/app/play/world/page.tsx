@@ -173,6 +173,28 @@ export default function WorldGamePage() {
     isPaused ? resumeGame() : pauseGame();
   };
 
+  const handleSkip = useCallback(async () => {
+    if (!sessionId || isGuessing || isPaused || isComplete) return;
+    const currentCountry = countries[currentCountryIndex];
+    if (!currentCountry) return;
+    setIsGuessing(true);
+    soundManager.playWrong();
+    try {
+      const result = await gameApi.submitGuess(sessionId, {
+        countryCode: currentCountry.code,
+        isCorrect: false,
+        timeTakenMs: countryStartTime ? Date.now() - countryStartTime : 0,
+      });
+      submitGuess("__skip__", result);
+      setTimeout(async () => {
+        if (currentCountryIndex + 1 >= countries.length) {
+          try { completeGame(await gameApi.completeSession(sessionId)); } catch { completeGame({ sessionId, score: result.totalScore, accuracy: (guessedCorrectly.size / countries.length) * 100, correctCount: guessedCorrectly.size, totalCount: countries.length, bestStreak: result.currentStreak, timeTaken: 0, newPersonalBest: false }); }
+        } else { nextCountry(); soundManager.playBeep(); }
+        setIsGuessing(false);
+      }, 300);
+    } catch { setIsGuessing(false); }
+  }, [sessionId, isGuessing, isPaused, isComplete, countries, currentCountryIndex, countryStartTime, guessedCorrectly, submitGuess, nextCountry, completeGame]);
+
   const handleEndGame = async () => {
     if (!sessionId || isComplete) return;
     try {
@@ -233,7 +255,7 @@ export default function WorldGamePage() {
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       {/* Game header with prompt */}
-      <GameHeader onPause={handlePause} onEndGame={handleEndGame} currentCountry={currentCountry ?? undefined} />
+      <GameHeader onPause={handlePause} onEndGame={handleEndGame} onSkip={handleSkip} currentCountry={currentCountry ?? undefined} />
 
       {/* Map — fills all remaining height */}
       <div className="flex-1 relative overflow-hidden bg-[#0d1526] dark:bg-[#0d1526]">

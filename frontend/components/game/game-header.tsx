@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import Image from "next/image";
-import { Pause, Play, Flame, Target, Volume2, VolumeX, Flag, Volume1 } from "lucide-react";
+import { Pause, Play, Flame, Target, Volume2, VolumeX, Flag, Volume1, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "@/lib/game-store";
 import { soundManager } from "@/components/game/sound-manager";
@@ -13,8 +13,9 @@ import type { Country } from "@/types";
 interface GameHeaderProps {
   onPause: () => void;
   onEndGame?: () => void;
+  onSkip?: () => void;
   currentCountry?: Country;
-  promptLabel?: string; // e.g. "Find this state" for India
+  promptLabel?: string;
 }
 
 function formatTime(seconds: number) {
@@ -23,7 +24,7 @@ function formatTime(seconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "Find this country" }: GameHeaderProps) {
+export function GameHeader({ onPause, onEndGame, onSkip, currentCountry, promptLabel = "Find this country" }: GameHeaderProps) {
   const {
     score, streak, countries, isPaused, isComplete, guessedCorrectly,
     timeRemainingSeconds, tickTimer,
@@ -33,8 +34,28 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const spokenCodeRef = useRef<string | null>(null);
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
-  // Countdown timer
+  // Pick the best available TTS voice
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      voiceRef.current =
+        voices.find(v => v.name === "Samantha") ||
+        voices.find(v => v.name === "Karen") ||
+        voices.find(v => v.name === "Daniel") ||
+        voices.find(v => v.name.includes("Google") && v.lang.startsWith("en")) ||
+        voices.find(v => v.lang === "en-US" && !v.name.includes("Microsoft")) ||
+        voices.find(v => v.lang.startsWith("en-") && !v.name.includes("Microsoft")) ||
+        voices.find(v => v.lang.startsWith("en")) ||
+        null;
+    };
+    pickVoice();
+    window.speechSynthesis.addEventListener("voiceschanged", pickVoice);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", pickVoice);
+  }, []);
+
   useEffect(() => {
     if (isComplete || timeRemainingSeconds === null) return;
     const id = setInterval(() => tickTimer(), 1000);
@@ -49,15 +70,15 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 0.88;
-    utt.pitch = 1;
+    if (voiceRef.current) utt.voice = voiceRef.current;
+    utt.rate = 0.9;
+    utt.pitch = 1.05;
     utt.onstart = () => setIsSpeaking(true);
     utt.onend = () => setIsSpeaking(false);
     utt.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utt);
   }, []);
 
-  // Auto-speak when country changes (once per country)
   useEffect(() => {
     if (!currentCountry || isPaused || isComplete) return;
     if (spokenCodeRef.current === currentCountry.code) return;
@@ -70,17 +91,14 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
     if (isSpeaking) window.speechSynthesis?.cancel();
     setTtsEnabled(v => !v);
   };
-  const handleSpeakNow = () => {
-    if (currentCountry) speak(currentCountry.name);
-  };
 
   const correctCount = guessedCorrectly.size;
   const totalCount = countries.length;
   const timeWarning = timeRemainingSeconds !== null && timeRemainingSeconds <= 60 && timeRemainingSeconds > 0;
 
-  const TimerBadge = ({ small = false }: { small?: boolean }) => (
+  const TimerDisplay = ({ small = false }: { small?: boolean }) => (
     timeRemainingSeconds === null ? (
-      <div className={cn("px-2 py-0.5 rounded-full bg-muted text-muted-foreground", small ? "text-xs" : "text-sm font-medium")}>∞</div>
+      <div className={cn("px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-mono", small ? "text-xs" : "text-sm font-medium")}>∞</div>
     ) : (
       <div className={cn(
         "px-2 py-0.5 rounded-full font-mono font-bold tabular-nums",
@@ -95,7 +113,7 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
   return (
     <div className="border-b border-border/60 bg-background/90 backdrop-blur-sm">
 
-      {/* ── PROMPT ROW (country/state to find) ──────────────────────────────── */}
+      {/* ── PROMPT ROW ─────────────────────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {currentCountry && !isComplete && (
           <motion.div
@@ -104,39 +122,37 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
-            className="flex items-center justify-between px-3 sm:px-4 pt-2 pb-1 border-b border-border/30"
+            className="flex items-center border-b border-border/30 px-3 sm:px-4 py-2"
           >
-            {/* Label + flag + name */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-semibold shrink-0 hidden sm:block">
-                {promptLabel}
-              </span>
-              {currentCountry.flagUrl && (
-                <div className="relative w-7 h-5 sm:w-8 sm:h-6 rounded overflow-hidden border border-border/40 shrink-0">
-                  <Image
-                    src={currentCountry.flagUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              )}
-              <span className="text-base sm:text-xl font-extrabold tracking-tight truncate">
-                {currentCountry.name}
-              </span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-semibold shrink-0 sm:hidden">
-                {promptLabel}
-              </span>
+            {/* Left: timer */}
+            <div className="w-14 sm:w-16 shrink-0">
+              <TimerDisplay small />
             </div>
 
-            {/* TTS controls */}
-            <div className="flex items-center gap-0.5 shrink-0">
+            {/* Center: prompt label + flag + name */}
+            <div className="flex-1 flex flex-col items-center text-center gap-0.5 min-w-0">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold leading-none">
+                {promptLabel}
+              </span>
+              <div className="flex items-center gap-2">
+                {currentCountry.flagUrl && (
+                  <div className="relative w-7 h-5 sm:w-8 sm:h-6 rounded overflow-hidden border border-border/40 shrink-0">
+                    <Image src={currentCountry.flagUrl} alt="" fill className="object-cover" unoptimized />
+                  </div>
+                )}
+                <span className="text-base sm:text-xl font-extrabold tracking-tight truncate max-w-[180px] sm:max-w-xs">
+                  {currentCountry.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Right: TTS + skip */}
+            <div className="w-14 sm:w-20 shrink-0 flex items-center justify-end gap-0.5">
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn("w-7 h-7", isSpeaking ? "text-cyan-400" : "text-muted-foreground hover:text-foreground")}
-                onClick={handleSpeakNow}
+                onClick={() => currentCountry && speak(currentCountry.name)}
                 title="Speak name"
               >
                 <Volume1 className="w-3.5 h-3.5" />
@@ -150,12 +166,23 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
               >
                 {ttsEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </Button>
+              {onSkip && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 text-muted-foreground hover:text-yellow-400"
+                  onClick={onSkip}
+                  title="Skip this question"
+                >
+                  <SkipForward className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── MOBILE controls row (< sm) ──────────────────────────────────────── */}
+      {/* ── MOBILE controls row ─────────────────────────────────────────────── */}
       <div className="sm:hidden px-3 py-1.5 space-y-1">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -170,7 +197,6 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <TimerBadge small />
             <Button variant="ghost" size="icon" onClick={handleSfxMute} className="w-7 h-7 text-muted-foreground">
               {sfxMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </Button>
@@ -184,7 +210,6 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
             </Button>
           </div>
         </div>
-        {/* Progress */}
         <div className="flex items-center gap-2 w-full">
           <span className="text-xs text-muted-foreground tabular-nums shrink-0">
             <span className="text-green-400 font-bold">{correctCount}</span>/{totalCount}
@@ -196,9 +221,8 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
         </div>
       </div>
 
-      {/* ── DESKTOP controls row (sm+) ──────────────────────────────────────── */}
+      {/* ── DESKTOP controls row ─────────────────────────────────────────────── */}
       <div className="hidden sm:flex items-center justify-between px-4 py-1.5 gap-2">
-        {/* Score + streak */}
         <div className="flex items-center gap-3">
           <div>
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Score</p>
@@ -215,14 +239,11 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
           </div>
         </div>
 
-        {/* Progress + timer (center) */}
+        {/* Progress (center) */}
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-sm font-medium">
-              <Target className="w-3.5 h-3.5 text-primary" />
-              <span><span className="text-green-400 font-bold">{correctCount}</span><span className="text-muted-foreground"> / {totalCount}</span></span>
-            </div>
-            <TimerBadge />
+          <div className="flex items-center gap-1 text-sm font-medium">
+            <Target className="w-3.5 h-3.5 text-primary" />
+            <span><span className="text-green-400 font-bold">{correctCount}</span><span className="text-muted-foreground"> / {totalCount}</span></span>
           </div>
           <div className="w-28 h-1.5 bg-muted rounded-full overflow-hidden">
             <motion.div className="h-full bg-gradient-to-r from-indigo-500 to-green-500 rounded-full" initial={{ width: 0 }}
@@ -230,7 +251,6 @@ export function GameHeader({ onPause, onEndGame, currentCountry, promptLabel = "
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={handleSfxMute} title={sfxMuted ? "Unmute SFX" : "Mute SFX"} className="text-muted-foreground hover:text-foreground">
             {sfxMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
