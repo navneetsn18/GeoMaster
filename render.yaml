@@ -7,7 +7,7 @@ services:
     plan: free
     envVars:
       - key: DATABASE_URL
-        value: jdbc:postgresql://ep-spring-hill-ao40h238.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+        value: jdbc:postgresql://ep-little-bread-a6d0medq-pooler.us-west-2.aws.neon.tech/neondb?sslmode=require
       - key: DB_USER
         value: neondb_owner
       - key: DB_PASS
