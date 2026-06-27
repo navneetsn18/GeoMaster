@@ -5,6 +5,12 @@ export interface User {
   createdAt?: string;
   avatarUrl?: string;
   role?: "USER" | "ADMIN";
+  banned?: boolean;
+}
+
+export interface AdminContact {
+  username: string;
+  email: string;
 }
 
 export interface Country {

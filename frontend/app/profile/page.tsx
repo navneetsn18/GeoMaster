@@ -51,6 +51,7 @@ export default function ProfilePage() {
   const [editField, setEditField] = useState<"username" | "email" | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [adminContacts, setAdminContacts] = useState<import("@/types").AdminContact[]>([]);
 
   useEffect(() => {
     if (!getToken()) {
@@ -66,12 +67,14 @@ export default function ProfilePage() {
       if (profileRes.status === "fulfilled") {
         const profile = profileRes.value;
         setStats(profile.stats);
-        // Sync avatarUrl into stored user
         const stored = getStoredUser();
         if (stored) {
-          const updated = { ...stored, avatarUrl: profile.avatarUrl };
+          const updated = { ...stored, avatarUrl: profile.avatarUrl, banned: (profile as User & { banned?: boolean }).banned };
           storeUser(updated);
           setUser(updated);
+        }
+        if ((profile as User & { banned?: boolean }).banned) {
+          userApi.getAdminContacts().then(setAdminContacts).catch(() => {});
         }
       }
       if (modeRes.status === "fulfilled") setModeStats(modeRes.value);
@@ -179,6 +182,38 @@ export default function ProfilePage() {
 
   return (
     <div className="container py-8 max-w-5xl space-y-8">
+      {/* Ban banner */}
+      {user.banned && (
+        <div className="rounded-xl border border-red-500/40 bg-red-950/30 p-4 sm:p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl shrink-0">🚫</span>
+            <div>
+              <p className="font-bold text-red-400 text-base">Your account has been suspended</p>
+              <p className="text-sm text-red-300/80 mt-0.5">
+                You can browse GeoMaster but cannot start new games. To appeal your ban, contact an admin directly.
+              </p>
+            </div>
+          </div>
+          {adminContacts.length > 0 && (
+            <div className="border-t border-red-500/20 pt-3">
+              <p className="text-xs text-red-400/70 uppercase tracking-wide font-medium mb-2">Admin contacts</p>
+              <div className="flex flex-wrap gap-2">
+                {adminContacts.map((a) => (
+                  <a
+                    key={a.email}
+                    href={`mailto:${a.email}?subject=Account%20Ban%20Appeal%20-%20${encodeURIComponent(user.username)}&body=Hello%20${encodeURIComponent(a.username)}%2C%0A%0AI%20would%20like%20to%20appeal%20my%20account%20suspension%20for%20username%3A%20${encodeURIComponent(user.username)}.%0A%0A`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-900/40 border border-red-500/30 text-sm hover:bg-red-900/60 transition-colors"
+                  >
+                    <span className="text-red-300 font-medium">@{a.username}</span>
+                    <span className="text-red-400/60">·</span>
+                    <span className="text-red-400/80 text-xs">{a.email}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Profile header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}

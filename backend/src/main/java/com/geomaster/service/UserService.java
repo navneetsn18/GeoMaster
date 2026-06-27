@@ -73,7 +73,17 @@ public class UserService {
         private String username;
         private String email;
         private String avatarUrl;
+        private boolean banned;
         private UserStats stats;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminContact {
+        private String username;
+        private String email;
     }
 
     @Data
@@ -122,6 +132,7 @@ public class UserService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
+                .banned(user.isBanned())
                 .stats(stats)
                 .build();
     }
@@ -205,6 +216,16 @@ public class UserService {
                         .avgAccuracy(gameSessionRepository.findAvgAccuracyByUserId(f.getId()).orElse(0.0) * 100.0)
                         .bestStreak(gameSessionRepository.findBestStreakByUserId(f.getId()).orElse(0))
                         .banned(f.isBanned())
+                        .build())
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminContact> getAdminContacts() {
+        return userRepository.findByRole("ADMIN").stream()
+                .map(u -> AdminContact.builder()
+                        .username(u.getUsername())
+                        .email(u.getEmail())
                         .build())
                 .toList();
     }

@@ -74,6 +74,11 @@ public class UserController {
         return ResponseEntity.ok(updated);
     }
 
+    @GetMapping("/admin-contacts")
+    public ResponseEntity<List<UserService.AdminContact>> getAdminContacts() {
+        return ResponseEntity.ok(userService.getAdminContacts());
+    }
+
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> uploadAvatar(
             @AuthenticationPrincipal UserDetails userDetails,

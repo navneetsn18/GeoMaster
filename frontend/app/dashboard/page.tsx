@@ -87,6 +87,19 @@ export default function DashboardPage() {
 
   return (
     <div className="container py-6 sm:py-8 px-4 space-y-6 sm:space-y-8 max-w-6xl">
+      {/* Ban notice */}
+      {user.banned && (
+        <div className="rounded-xl border border-red-500/40 bg-red-950/20 px-4 py-3 flex items-center gap-3">
+          <span className="text-xl shrink-0">🚫</span>
+          <div>
+            <p className="font-semibold text-red-400 text-sm">Account suspended — games disabled</p>
+            <p className="text-xs text-red-300/70 mt-0.5">
+              Visit your <a href="/profile" className="underline underline-offset-2 hover:text-red-300">profile page</a> to see admin contacts and submit an appeal.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Welcome header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -101,7 +114,7 @@ export default function DashboardPage() {
           👋
         </h1>
         <p className="text-muted-foreground mt-1">
-          Choose a game mode to start playing.
+          {user.banned ? "Your account is suspended. You cannot start new games." : "Choose a game mode to start playing."}
         </p>
       </motion.div>
 
@@ -126,7 +139,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: i * 0.05 }}
             >
-              <Card className="group hover:border-primary/60 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer h-full">
+              <Card className={`h-full transition-all duration-300 ${user.banned ? "opacity-50 cursor-not-allowed" : "group hover:border-primary/60 hover:shadow-lg hover:shadow-primary/10 cursor-pointer"}`}>
                 <CardContent className="p-4 sm:p-5 flex flex-col h-full">
                   <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{mode.emoji}</div>
                   <h3 className="font-bold text-sm sm:text-base">{mode.label}</h3>
@@ -138,8 +151,12 @@ export default function DashboardPage() {
                       size="sm"
                       className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                       variant="outline"
-                      asChild
+                      disabled={!!user.banned}
+                      asChild={!user.banned}
                     >
+                      {user.banned ? (
+                        <span><Play className="w-3 h-3 mr-1" />Play</span>
+                      ) : (
                       <Link
                         href={
                           mode.href
@@ -152,6 +169,7 @@ export default function DashboardPage() {
                         <Play className="w-3 h-3 mr-1" />
                         Play
                       </Link>
+                      )}
                     </Button>
                   </div>
                 </CardContent>

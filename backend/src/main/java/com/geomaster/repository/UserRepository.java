@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     long countByBanned(boolean banned);
 
+    List<User> findByRole(String role);
+
     /**
      * Returns the friend IDs for a given user (the IDs of users that userId has added as friends).
      */

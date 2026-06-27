@@ -37,6 +37,10 @@ public class GameService {
     public GameSessionDto startSession(String userEmail, StartSessionRequest request) {
         User user = findUser(userEmail);
 
+        if (user.isBanned()) {
+            throw new ForbiddenException("Your account has been suspended. Contact an admin to appeal.");
+        }
+
         GameSession session = GameSession.builder()
                 .userId(user.getId())
                 .mapType(request.getMapType().name())

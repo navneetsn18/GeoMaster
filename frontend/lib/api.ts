@@ -182,6 +182,11 @@ export const userApi = {
     await api.delete(`/user/following/${encodeURIComponent(username)}`);
   },
 
+  getAdminContacts: async (): Promise<import("@/types").AdminContact[]> => {
+    const { data } = await api.get<import("@/types").AdminContact[]>("/user/admin-contacts");
+    return data;
+  },
+
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
     const form = new FormData();
     form.append("file", file);
