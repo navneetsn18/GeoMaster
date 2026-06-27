@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 import { LogOut, User, Trophy, Map, LayoutDashboard, Menu, X, ShieldAlert } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { getStoredUser, removeToken } from "@/lib/auth";
+import { getStoredUser, storeUser, removeToken, getToken } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
+import { authApi } from "@/lib/api";
 import type { User as UserType } from "@/types";
 
 const BASE_NAV_LINKS = [
@@ -25,7 +26,15 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    setUser(getStoredUser());
+    const stored = getStoredUser();
+    setUser(stored);
+    // Refresh user from backend to pick up role/avatar changes without re-login
+    if (getToken()) {
+      authApi.getMe().then(fresh => {
+        storeUser(fresh);
+        setUser(fresh);
+      }).catch(() => {});
+    }
   }, [pathname]);
 
   const handleLogout = () => {
