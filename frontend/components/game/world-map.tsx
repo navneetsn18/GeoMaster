@@ -24,8 +24,9 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
   const wrongGuesses = useGameStore((s) => s.wrongGuesses);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // Globe rotation state [longitude, latitude, roll]
+  // Globe rotation + zoom
   const [rotation, setRotation] = useState<[number, number, number]>([-10, -20, 0]);
+  const [scale, setScale] = useState(280);
   const dragRef = useRef<{ x: number; y: number; rot: [number, number, number]; moved: boolean } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +90,18 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
     [isDark, guessedCorrectly, wrongGuesses]
   );
 
+  // Scroll to zoom — must use addEventListener (passive:false) so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setScale(s => Math.min(1200, Math.max(100, s - e.deltaY * 0.8)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
   // Auto-rotate when idle
   const autoRotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
@@ -112,7 +125,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
     >
       <ComposableMap
         projection="geoOrthographic"
-        projectionConfig={{ rotate: rotation, scale: 280 }}
+        projectionConfig={{ rotate: rotation, scale }}
         style={{ width: "100%", height: "100%" }}
       >
         {/* Ocean */}
@@ -163,7 +176,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
 
       {/* Drag hint */}
       <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/50 pointer-events-none select-none">
-        Drag to rotate
+        Drag to rotate · Scroll to zoom
       </div>
     </div>
   );
