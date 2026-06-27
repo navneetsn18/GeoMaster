@@ -184,7 +184,7 @@ export default function ProfilePage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center gap-5"
+        className="flex flex-wrap items-center gap-4 sm:gap-5"
       >
         {/* Avatar with upload overlay */}
         <div className="relative group shrink-0">
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
-                className="h-8 text-lg font-bold w-48"
+                className="h-8 text-base sm:text-lg font-bold w-full max-w-[200px]"
                 autoFocus
               />
               <button onClick={saveEdit} disabled={isSavingEdit} className="text-green-400 hover:text-green-300">
@@ -234,7 +234,7 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="flex items-center gap-2 group">
-              <h1 className="text-3xl font-bold">{user.username}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">{user.username}</h1>
               <button onClick={() => startEdit("username")} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
                 <Pencil className="w-4 h-4" />
               </button>
@@ -249,7 +249,7 @@ export default function ProfilePage() {
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
-                className="h-7 text-sm w-56"
+                className="h-7 text-sm w-full max-w-[220px]"
                 autoFocus
               />
               <button onClick={saveEdit} disabled={isSavingEdit} className="text-green-400 hover:text-green-300">
@@ -270,7 +270,7 @@ export default function ProfilePage() {
             Geography Explorer
           </Badge>
           <p className="text-xs text-muted-foreground mt-1">
-            Hover username/email to edit · Hover avatar to change photo
+            Tap username/email to edit · Tap avatar to change photo
           </p>
         </div>
       </motion.div>

@@ -52,7 +52,7 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="max-w-sm mx-4">
+      <DialogContent className="max-w-sm w-[calc(100vw-2rem)] mx-4">
         <DialogHeader>
           <div className="text-center mb-2">
             {sessionResult.newPersonalBest ? (
@@ -80,11 +80,11 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
         </DialogHeader>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-3 my-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 my-4">
           {stats.map(({ icon: Icon, label, value, color }) => (
             <div
               key={label}
-              className="flex flex-col items-center gap-1 p-3 rounded-xl bg-muted"
+              className="flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl bg-muted"
             >
               <Icon className={`w-5 h-5 ${color}`} />
               <p className={`text-xl font-bold ${color}`}>{value}</p>

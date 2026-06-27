@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="container py-8 max-w-4xl">
+    <div className="container py-6 sm:py-8 px-4 max-w-4xl">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -98,20 +98,22 @@ export default function LeaderboardPage() {
         </TabsList>
       </Tabs>
 
-      {/* Map type sub-tabs */}
+      {/* Map type sub-tabs — horizontal scroll on mobile */}
       <Tabs
         defaultValue="WORLD"
         value={mapType}
         onValueChange={(v) => setMapType(v as MapType)}
         className="mb-6"
       >
-        <TabsList className="flex-wrap h-auto gap-1 bg-muted/50">
-          {MAP_TYPES.map((m) => (
-            <TabsTrigger key={m.value} value={m.value} className="text-xs">
-              {m.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="overflow-x-auto pb-1 -mx-1 px-1">
+          <TabsList className="flex flex-nowrap w-max gap-1 bg-muted/50 h-auto">
+            {MAP_TYPES.map((m) => (
+              <TabsTrigger key={m.value} value={m.value} className="text-xs whitespace-nowrap shrink-0">
+                {m.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
       </Tabs>
 
       {/* Table */}

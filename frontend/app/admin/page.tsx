@@ -112,8 +112,8 @@ export default function AdminPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex items-center gap-3 mb-8">
-        <ShieldCheck className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+        <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
       </div>
 
       {error && (
@@ -155,7 +155,7 @@ export default function AdminPage() {
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left p-3 font-medium">User</th>
-                  <th className="text-left p-3 font-medium">Email</th>
+                  <th className="text-left p-3 font-medium hidden sm:table-cell">Email</th>
                   <th className="text-center p-3 font-medium">Games</th>
                   <th className="text-center p-3 font-medium hidden md:table-cell">Best Score</th>
                   <th className="text-center p-3 font-medium hidden md:table-cell">Accuracy</th>
@@ -178,7 +178,7 @@ export default function AdminPage() {
                         <span className="font-medium">{u.username}</span>
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground">{u.email}</td>
+                    <td className="p-3 text-muted-foreground hidden sm:table-cell text-xs truncate max-w-[180px]">{u.email}</td>
                     <td className="p-3 text-center">{u.gamesPlayed}</td>
                     <td className="p-3 text-center hidden md:table-cell text-yellow-400 font-semibold">{u.bestScore?.toLocaleString() ?? "—"}</td>
                     <td className="p-3 text-center hidden md:table-cell text-green-400">{u.avgAccuracy != null ? `${u.avgAccuracy.toFixed(1)}%` : "—"}</td>

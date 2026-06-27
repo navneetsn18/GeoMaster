@@ -238,9 +238,9 @@ export default function IndiaStatesPage() {
 
         {/* Small territories panel — bottom-left */}
         {!isComplete && smallUTs.length > 0 && (
-          <div className="absolute bottom-3 left-3 z-20 flex flex-col gap-1">
-            <span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-wider px-1">Small territories</span>
-            <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+          <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-20 flex flex-col gap-1 max-w-[160px] sm:max-w-[200px]">
+            <span className="text-[9px] sm:text-[10px] text-muted-foreground/70 font-medium uppercase tracking-wider px-1">Small UTs</span>
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
               {smallUTs.map((ut) => {
                 const code = ut.code.toLowerCase();
                 const isCorrect = guessedCorrectly.has(code);

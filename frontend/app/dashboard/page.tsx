@@ -86,14 +86,14 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="container py-8 space-y-8 max-w-6xl">
+    <div className="container py-6 sm:py-8 px-4 space-y-6 sm:space-y-8 max-w-6xl">
       {/* Welcome header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-2xl sm:text-3xl font-bold">
           Welcome back,{" "}
           <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
             {user.username}
@@ -127,10 +127,10 @@ export default function DashboardPage() {
               transition={{ duration: 0.3, delay: i * 0.05 }}
             >
               <Card className="group hover:border-primary/60 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 cursor-pointer h-full">
-                <CardContent className="p-5 flex flex-col h-full">
-                  <div className="text-4xl mb-3">{mode.emoji}</div>
-                  <h3 className="font-bold text-base">{mode.label}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5 mb-4">
+                <CardContent className="p-4 sm:p-5 flex flex-col h-full">
+                  <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{mode.emoji}</div>
+                  <h3 className="font-bold text-sm sm:text-base">{mode.label}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 mb-3 sm:mb-4 hidden sm:block">
                     {mode.description}
                   </p>
                   <div className="mt-auto">

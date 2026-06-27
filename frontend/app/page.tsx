@@ -365,7 +365,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="text-7xl mb-6 inline-block select-none"
+            className="text-5xl sm:text-7xl mb-4 sm:mb-6 inline-block select-none"
           >
             🌍
           </motion.div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-6"
+            className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-5 sm:mb-6"
           >
             How well do you{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
@@ -387,7 +387,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-xl md:text-2xl text-white/60 max-w-xl mx-auto mb-10 leading-relaxed"
+            className="text-base sm:text-xl md:text-2xl text-white/60 max-w-xl mx-auto mb-8 sm:mb-10 leading-relaxed"
           >
             Click countries. Beat streaks. Flex on the leaderboard.
             <br />No passport required.
@@ -403,7 +403,7 @@ export default function LandingPage() {
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(34,197,94,0.45)" }}
                 whileTap={{ scale: 0.97 }}
-                className="bg-green-500 hover:bg-green-400 text-black font-black text-lg px-10 py-4 rounded-2xl flex items-center gap-2 transition-colors"
+                className="bg-green-500 hover:bg-green-400 text-black font-black text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-2xl flex items-center gap-2 transition-colors"
               >
                 Play Free <ArrowRight className="w-5 h-5" />
               </motion.button>
@@ -412,7 +412,7 @@ export default function LandingPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.97 }}
-                className="border-2 border-white/20 hover:border-white/50 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-colors backdrop-blur-sm"
+                className="border-2 border-white/20 hover:border-white/50 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 rounded-2xl transition-colors backdrop-blur-sm"
               >
                 Log In
               </motion.button>
@@ -472,7 +472,7 @@ export default function LandingPage() {
             className="text-center mb-14"
           >
             <p className="text-green-400 font-bold tracking-widest uppercase text-sm mb-3">Choose Your Arena</p>
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight">Pick your challenge</h2>
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight">Pick your challenge</h2>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -488,13 +488,13 @@ export default function LandingPage() {
                   <motion.div
                     whileHover={{ scale: 1.04, y: -4 }}
                     whileTap={{ scale: 0.97 }}
-                    className={`relative overflow-hidden rounded-2xl p-6 h-44 flex flex-col justify-between cursor-pointer bg-gradient-to-br ${mode.bg} shadow-xl`}
+                    className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 min-h-[140px] sm:min-h-[176px] flex flex-col justify-between cursor-pointer bg-gradient-to-br ${mode.bg} shadow-xl`}
                   >
                     <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-                    <span className="text-4xl">{mode.emoji}</span>
+                    <span className="text-3xl sm:text-4xl">{mode.emoji}</span>
                     <div>
-                      <p className="font-black text-lg leading-tight">{mode.label}</p>
-                      <p className="text-white/70 text-xs mt-0.5">{mode.sub}</p>
+                      <p className="font-black text-sm sm:text-lg leading-tight">{mode.label}</p>
+                      <p className="text-white/70 text-xs mt-0.5 hidden sm:block">{mode.sub}</p>
                     </div>
                   </motion.div>
                 </Link>
@@ -514,7 +514,7 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <p className="text-green-400 font-bold tracking-widest uppercase text-sm mb-3">Simple Rules</p>
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight">How it works</h2>
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight">How it works</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -552,7 +552,7 @@ export default function LandingPage() {
           className="relative max-w-3xl mx-auto"
         >
           <div className="text-6xl mb-6">🏆</div>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
             Your geography
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">

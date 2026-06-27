@@ -41,7 +41,7 @@ export function GameSetup({ modeName, onStart }: GameSetupProps) {
           <p className="text-muted-foreground">Choose your timer</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-8">
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 mb-8">
           {TIMER_OPTIONS.map((opt) => (
             <button
               key={opt.mode}
