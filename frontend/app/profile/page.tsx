@@ -268,11 +268,18 @@ export default function ProfilePage() {
               <button onClick={cancelEdit} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 group">
+            <div className="flex items-center gap-2 group flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold">{user.username}</h1>
-              <button onClick={() => startEdit("username")} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
-                <Pencil className="w-4 h-4" />
-              </button>
+              {user.banned && (
+                <span className="text-xs font-bold uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">
+                  Banned
+                </span>
+              )}
+              {!user.banned && (
+                <button onClick={() => startEdit("username")} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
             </div>
           )}
 
