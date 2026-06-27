@@ -15,9 +15,9 @@ const MAP_TYPE_LABELS: Record<string, string> = {
   EUROPE: "🌍 Europe",
   AMERICAS: "🌎 Americas",
   OCEANIA: "🌏 Oceania",
-  COUNTRY: "🇮🇳 India States",
+  INDIA_STATES: "🇮🇳 India States",
   WORLD_CAPITALS: "🏛️ World Capitals",
-  INDIA_CAPITALS: "🏛️ India Capitals",
+  INDIA_CAPITALS: "🇮🇳 India Capitals",
 };
 
 export function RecentGames() {

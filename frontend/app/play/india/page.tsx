@@ -61,7 +61,7 @@ export default function IndiaStatesPage() {
     setIsInitializing(true);
     setInitError(null);
     try {
-      const session = await gameApi.startSession("COUNTRY", "IN");
+      const session = await gameApi.startSession("INDIA_STATES");
       const enriched: Country[] = session.countries.map((c) => ({
         code: c.code,
         name: c.name,

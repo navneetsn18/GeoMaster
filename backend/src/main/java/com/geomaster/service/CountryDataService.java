@@ -451,7 +451,7 @@ public class CountryDataService {
             case OCEANIA -> ALL_COUNTRIES.stream()
                     .filter(c -> "OC".equals(c.continent()))
                     .collect(Collectors.toList());
-            case COUNTRY -> getSubdivisions(regionCode);
+            case INDIA_STATES -> new ArrayList<>(INDIA_STATES);
             case WORLD_CAPITALS -> ALL_COUNTRIES.stream()
                     .map(c -> new Country(c.code(), WORLD_CAPITALS_MAP.getOrDefault(c.code(), c.name()), c.continent()))
                     .collect(Collectors.toList());

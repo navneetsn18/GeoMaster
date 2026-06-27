@@ -31,7 +31,7 @@ export type MapType =
   | "EUROPE"
   | "AMERICAS"
   | "OCEANIA"
-  | "COUNTRY"
+  | "INDIA_STATES"
   | "WORLD_CAPITALS"
   | "INDIA_CAPITALS";
 
@@ -116,7 +116,7 @@ export interface AuthResponse {
 export type LeaderboardPeriod = "ALL_TIME" | "THIS_WEEK" | "TODAY" | "FRIENDS";
 
 export interface GameMode {
-  id: MapType | "INDIA_STATES";
+  id: MapType;
   label: string;
   emoji: string;
   description: string;
