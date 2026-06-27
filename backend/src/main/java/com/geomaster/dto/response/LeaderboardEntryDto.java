@@ -15,6 +15,7 @@ public class LeaderboardEntryDto {
     private int rank;
     private String userId;
     private String username;
+    private String avatarUrl;
     private int score;
     private int correctCount;
     private double accuracy;

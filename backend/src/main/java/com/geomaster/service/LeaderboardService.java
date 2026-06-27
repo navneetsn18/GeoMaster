@@ -72,6 +72,7 @@ public class LeaderboardService {
                             .rank(i + 1)
                             .userId(s.getUserId())
                             .username(u != null ? u.getUsername() : "Unknown")
+                            .avatarUrl(u != null ? u.getAvatarUrl() : null)
                             .score(s.getFinalScore())
                             .correctCount(s.getCorrectCount())
                             .accuracy(accuracy)
