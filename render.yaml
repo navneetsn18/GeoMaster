@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: geomaster-backend
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        value: jdbc:postgresql://ep-spring-hill-ao40h238.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      - key: DB_USER
+        value: neondb_owner
+      - key: DB_PASS
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        value: di873ywkm
+      - key: CLOUDINARY_API_KEY
+        value: 978982948358589
+      - key: CLOUDINARY_API_SECRET
+        sync: false
