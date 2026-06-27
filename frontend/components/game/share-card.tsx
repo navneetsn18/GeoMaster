@@ -11,15 +11,15 @@ import { formatAccuracy, formatScore } from "@/lib/utils";
 import type { LeaderboardEntry, RecentGame } from "@/types";
 
 const MODE_LABELS: Record<string, string> = {
-  WORLD: "🌍 World",
-  AFRICA: "🌍 Africa",
-  ASIA: "🌏 Asia",
-  EUROPE: "🌍 Europe",
-  AMERICAS: "🌎 Americas",
-  OCEANIA: "🌏 Oceania",
-  INDIA_STATES: "🇮🇳 India States",
-  WORLD_CAPITALS: "🏛️ World Capitals",
-  INDIA_CAPITALS: "🇮🇳 India Capitals",
+  WORLD: "World",
+  AFRICA: "Africa",
+  ASIA: "Asia",
+  EUROPE: "Europe",
+  AMERICAS: "Americas",
+  OCEANIA: "Oceania",
+  INDIA_STATES: "India States",
+  WORLD_CAPITALS: "World Capitals",
+  INDIA_CAPITALS: "India Capitals",
 };
 
 interface ShareCardData {
@@ -102,7 +102,9 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
       {/* TOP ROW */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ fontSize: 20 }}>🌍</span>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4ade80)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.9)" }} />
+          </div>
           <span style={{ fontSize: 17, fontWeight: 900, color: "#fff", letterSpacing: "-0.4px" }}>GeoMaster</span>
         </div>
         {modeLabel && (
@@ -140,7 +142,7 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
               borderRadius: 100, padding: "2px 9px",
               fontSize: 11.5, fontWeight: 800, color: "#fff",
             }}>
-              {data.rank === 1 ? "🥇 1st" : data.rank === 2 ? "🥈 2nd" : data.rank === 3 ? "🥉 3rd" : `#${data.rank}`}
+              {data.rank === 1 ? "#1" : data.rank === 2 ? "#2" : data.rank === 3 ? "#3" : `#${data.rank}`}
             </div>
           )}
           {data.isPB && !data.rank && (
@@ -148,7 +150,7 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
               background: "linear-gradient(135deg,#f59e0b,#ef4444)",
               borderRadius: 100, padding: "2px 9px",
               fontSize: 11, fontWeight: 800, color: "#fff",
-            }}>🏆 PB</div>
+            }}>PB</div>
           )}
         </div>
 
@@ -157,25 +159,23 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef: React.RefObject<HTMLDivEl
         <div style={{ flex: 1 }}>
           <div style={{
             fontSize: 66, fontWeight: 900, lineHeight: 1,
-            background: "linear-gradient(135deg, #818cf8 10%, #34d399 90%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            color: "#4ade80",
             letterSpacing: "-3px", marginBottom: 2,
           }}>
             {formatScore(data.score)}
           </div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.32)", fontWeight: 700, letterSpacing: "2.5px", marginBottom: 18 }}>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "2.5px", marginBottom: 18 }}>
             FINAL SCORE
           </div>
-          <div style={{ display: "flex", gap: 18 }}>
+          <div style={{ display: "flex", gap: 24 }}>
             {[
-              { emoji: "🎯", label: "Accuracy", val: formatAccuracy(data.accuracy) },
-              ...(data.streak != null ? [{ emoji: "🔥", label: "Streak", val: `${data.streak}x` }] : []),
-              ...(data.correct != null && data.total != null ? [{ emoji: "✅", label: "Correct", val: `${data.correct}/${data.total}` }] : []),
+              { label: "Accuracy", val: formatAccuracy(data.accuracy), color: "#818cf8" },
+              ...(data.streak != null ? [{ label: "Streak", val: `${data.streak}x`, color: "#fb923c" }] : []),
+              ...(data.correct != null && data.total != null ? [{ label: "Correct", val: `${data.correct}/${data.total}`, color: "#4ade80" }] : []),
             ].map(s => (
-              <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 15 }}>{s.emoji}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>{s.val}</span>
-                <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.38)", fontWeight: 600 }}>{s.label}</span>
+              <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.val}</span>
+                <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.38)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>{s.label}</span>
               </div>
             ))}
           </div>
