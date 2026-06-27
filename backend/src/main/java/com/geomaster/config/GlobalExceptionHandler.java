@@ -1,6 +1,7 @@
 package com.geomaster.config;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.geomaster.exception.BadRequestException;
 import com.geomaster.exception.DuplicateEmailException;
 import com.geomaster.exception.DuplicateUsernameException;
 import com.geomaster.exception.ForbiddenException;
@@ -28,6 +29,11 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     // ── Custom domain exceptions ─────────────────────────────────────────────
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex) {
+        return buildError(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), null);
+    }
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicateEmail(DuplicateEmailException ex) {

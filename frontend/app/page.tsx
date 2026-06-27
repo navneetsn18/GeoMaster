@@ -141,9 +141,9 @@ function FlightArcs() {
                 calcMode="linear"
               />
             </path>
-            {/* Moving dot */}
+            {/* Plane along arc — top-view silhouette, rotate="auto" faces direction of travel */}
             <path id={pathId} d={arc.d} fill="none" />
-            <circle r="2.8" fill="white" fillOpacity="0.9">
+            <g fill="white">
               <animateMotion
                 dur={`${r.dur}s`}
                 begin={`${r.delay}s`}
@@ -152,13 +152,12 @@ function FlightArcs() {
               >
                 <mpath href={`#${pathId}`} />
               </animateMotion>
-              <animate
-                attributeName="r"
-                values="2.8;3.8;2.8"
-                dur="1.2s"
-                repeatCount="indefinite"
-              />
-            </circle>
+              {/* fuselage (points right = +x) */}
+              <polygon points="7,0 -4,-2 -2,0 -4,2" opacity="0.95" />
+              {/* swept wings */}
+              <polygon points="-1,-0.8 1,-6.5 -4,-5 -3,-0.8" opacity="0.7" />
+              <polygon points="-1,0.8 1,6.5 -4,5 -3,0.8" opacity="0.7" />
+            </g>
             {/* Trailing glow dot */}
             <circle r="5" fill="rgba(99,179,237,0.25)">
               <animateMotion
