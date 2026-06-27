@@ -9,7 +9,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.List;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPasswordHash())
-                .authorities(Collections.emptyList())
+                .authorities(List.of(new SimpleGrantedAuthority(user.getRole())))
                 .build();
     }
 }

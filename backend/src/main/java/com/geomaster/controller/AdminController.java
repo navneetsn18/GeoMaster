@@ -75,4 +75,14 @@ public class AdminController {
         adminService.unbanUser(id);
         return ResponseEntity.ok(Map.of("message", "User unbanned"));
     }
+
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<Map<String, String>> setRole(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+        adminService.requireAdmin(userDetails.getUsername());
+        adminService.setRole(id, body.get("role"));
+        return ResponseEntity.ok(Map.of("message", "Role updated"));
+    }
 }

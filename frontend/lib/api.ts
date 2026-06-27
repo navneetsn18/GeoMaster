@@ -215,6 +215,7 @@ export interface AdminUser {
   id: string;
   username: string;
   email: string;
+  role: "USER" | "ADMIN";
   gamesPlayed: number;
   avatarUrl?: string;
   banned: boolean;
@@ -249,6 +250,9 @@ export const adminApi = {
   },
   unbanUser: async (id: string): Promise<void> => {
     await api.post(`/admin/users/${id}/unban`);
+  },
+  setRole: async (id: string, role: "USER" | "ADMIN"): Promise<void> => {
+    await api.patch(`/admin/users/${id}/role`, { role });
   },
 };
 

@@ -20,14 +20,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AdminService {
 
-    private static final String ADMIN_EMAIL = "navneetsn18@gmail.com";
-
     private final UserRepository userRepository;
     private final GameSessionRepository gameSessionRepository;
     private final FriendshipRepository friendshipRepository;
 
     public void requireAdmin(String callerEmail) {
-        if (!ADMIN_EMAIL.equals(callerEmail)) {
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new SecurityException("Access denied"));
+        if (!"ADMIN".equals(caller.getRole())) {
             throw new SecurityException("Access denied");
         }
     }
@@ -49,6 +49,7 @@ public class AdminService {
         private String id;
         private String username;
         private String email;
+        private String role;
         private long gamesPlayed;
         private String avatarUrl;
         private boolean banned;
@@ -90,6 +91,7 @@ public class AdminService {
                         .id(u.getId())
                         .username(u.getUsername())
                         .email(u.getEmail())
+                        .role(u.getRole())
                         .gamesPlayed(gameCounts.getOrDefault(u.getId(), 0L))
                         .avatarUrl(u.getAvatarUrl())
                         .banned(u.isBanned())
@@ -145,6 +147,16 @@ public class AdminService {
         user.setBanned(false);
         user.setBannedAt(null);
         user.setBanReason(null);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void setRole(String userId, String role) {
+        if (!"USER".equals(role) && !"ADMIN".equals(role))
+            throw new IllegalArgumentException("Role must be USER or ADMIN");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setRole(role);
         userRepository.save(user);
     }
 }

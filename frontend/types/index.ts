@@ -4,6 +4,7 @@ export interface User {
   email: string;
   createdAt?: string;
   avatarUrl?: string;
+  role?: "USER" | "ADMIN";
 }
 
 export interface Country {

@@ -6,11 +6,9 @@ import { adminApi, type AdminStats, type AdminUser } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import {
   Users, Trophy, Clock, Activity, ShieldBan, ShieldCheck,
-  Trash2, Gamepad2, BarChart3, AlertTriangle
+  Trash2, Gamepad2, BarChart3, AlertTriangle, Crown
 } from "lucide-react";
 import { getAvatarUrl } from "@/lib/avatar";
-
-const ADMIN_EMAIL = "navneetsn18@gmail.com";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -24,7 +22,7 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!user) return;
@@ -91,6 +89,16 @@ export default function AdminPage() {
     finally { setActionLoading(null); }
   }
 
+  async function handleSetRole(u: AdminUser, role: "USER" | "ADMIN") {
+    if (u.id === user?.id) return; // can't demote yourself
+    setActionLoading(u.id + ":role");
+    try {
+      await adminApi.setRole(u.id, role);
+      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, role } : x));
+    } catch { setError("Role change failed"); }
+    finally { setActionLoading(null); }
+  }
+
   if (!user) return null;
   if (!isAdmin) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -152,6 +160,7 @@ export default function AdminPage() {
                   <th className="text-center p-3 font-medium hidden md:table-cell">Best Score</th>
                   <th className="text-center p-3 font-medium hidden md:table-cell">Accuracy</th>
                   <th className="text-center p-3 font-medium hidden md:table-cell">Streak</th>
+                  <th className="text-center p-3 font-medium">Role</th>
                   <th className="text-center p-3 font-medium">Status</th>
                   <th className="text-center p-3 font-medium">Actions</th>
                 </tr>
@@ -175,6 +184,17 @@ export default function AdminPage() {
                     <td className="p-3 text-center hidden md:table-cell text-green-400">{u.avgAccuracy != null ? `${u.avgAccuracy.toFixed(1)}%` : "—"}</td>
                     <td className="p-3 text-center hidden md:table-cell text-orange-400">{u.bestStreak ?? "—"}x</td>
                     <td className="p-3 text-center">
+                      {u.role === "ADMIN" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
+                          <Crown className="w-3 h-3" /> Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                          User
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
                       {u.banned ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-medium" title={u.banReason}>
                           <ShieldBan className="w-3 h-3" /> Banned
@@ -187,6 +207,16 @@ export default function AdminPage() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-1">
+                        {u.id !== user?.id && (
+                          <button
+                            onClick={() => handleSetRole(u, u.role === "ADMIN" ? "USER" : "ADMIN")}
+                            disabled={!!actionLoading}
+                            className="p-1.5 rounded hover:bg-yellow-500/20 text-yellow-400 transition-colors"
+                            title={u.role === "ADMIN" ? "Demote to User" : "Promote to Admin"}
+                          >
+                            <Crown className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteSessions(u)}
                           disabled={!!actionLoading}
@@ -207,7 +237,7 @@ export default function AdminPage() {
                         ) : (
                           <button
                             onClick={() => { setBanTarget(u); setBanReason(""); }}
-                            disabled={!!actionLoading || u.email === ADMIN_EMAIL}
+                            disabled={!!actionLoading || u.id === user?.id}
                             className="p-1.5 rounded hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-30"
                             title="Ban"
                           >
@@ -216,7 +246,7 @@ export default function AdminPage() {
                         )}
                         <button
                           onClick={() => handleDeleteUser(u)}
-                          disabled={!!actionLoading || u.email === ADMIN_EMAIL}
+                          disabled={!!actionLoading || u.id === user?.id}
                           className="p-1.5 rounded hover:bg-red-500/20 text-red-400 transition-colors disabled:opacity-30"
                           title="Delete user"
                         >

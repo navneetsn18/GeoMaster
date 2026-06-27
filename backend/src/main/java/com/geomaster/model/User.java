@@ -42,6 +42,10 @@ public class User {
     private String avatarUrl;
 
     @Builder.Default
+    @Column(name = "role", nullable = false, length = 20)
+    private String role = "USER";
+
+    @Builder.Default
     @Column(name = "banned", nullable = false)
     private boolean banned = false;
 

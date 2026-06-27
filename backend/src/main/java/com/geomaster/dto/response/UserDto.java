@@ -14,6 +14,7 @@ public class UserDto {
     private String username;
     private String email;
     private String avatarUrl;
+    private String role;
     // Public stats — populated when fetching following list
     private Long totalGames;
     private Integer bestScore;

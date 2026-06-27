@@ -11,8 +11,6 @@ import { getAvatarUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
 import type { User as UserType } from "@/types";
 
-const ADMIN_EMAIL = "navneetsn18@gmail.com";
-
 const BASE_NAV_LINKS = [
   { href: "/dashboard", label: "Play", icon: Map },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -36,7 +34,7 @@ export default function Navbar() {
     window.location.href = "/";
   };
 
-  const navLinks = user?.email === ADMIN_EMAIL
+  const navLinks = user?.role === "ADMIN"
     ? [...BASE_NAV_LINKS, ADMIN_LINK]
     : BASE_NAV_LINKS;
 
