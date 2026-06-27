@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Timer, Zap, Clock, Infinity, Play } from "lucide-react";
+import { Timer, Zap, Clock, Infinity, Play, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TIMER_OPTIONS, type TimerMode } from "@/lib/game-store";
 import { cn } from "@/lib/utils";
@@ -28,14 +29,23 @@ interface GameSetupProps {
 
 export function GameSetup({ modeName, onStart }: GameSetupProps) {
   const [selected, setSelected] = useState<TimerMode>("mid");
+  const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </button>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">{modeName}</h1>
           <p className="text-muted-foreground">Choose your timer</p>
