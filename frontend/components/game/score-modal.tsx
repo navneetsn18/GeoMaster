@@ -25,8 +25,9 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
   const router = useRouter();
 
   const navigateTo = (path: string) => {
-    resetGame(); // clear isComplete so modal doesn't reopen on remount
-    router.push(path);
+    resetGame();
+    // Use hard navigation — router.push races with React re-render triggered by resetGame
+    window.location.href = path;
   };
 
   if (!sessionResult) return null;

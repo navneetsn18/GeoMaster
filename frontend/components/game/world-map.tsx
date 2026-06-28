@@ -102,16 +102,6 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  // Auto-rotate when idle
-  const autoRotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => {
-    autoRotateRef.current = setInterval(() => {
-      if (!dragRef.current) {
-        setRotation(r => [r[0] + 0.15, r[1], r[2]]);
-      }
-    }, 30);
-    return () => { if (autoRotateRef.current) clearInterval(autoRotateRef.current); };
-  }, []);
 
   return (
     <div
