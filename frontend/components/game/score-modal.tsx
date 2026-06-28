@@ -21,8 +21,13 @@ interface ScoreModalProps {
 }
 
 export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
-  const { sessionResult, bestStreak, score, mapType } = useGameStore();
+  const { sessionResult, bestStreak, score, mapType, resetGame } = useGameStore();
   const router = useRouter();
+
+  const navigateTo = (path: string) => {
+    resetGame(); // clear isComplete so modal doesn't reopen on remount
+    router.push(path);
+  };
 
   if (!sessionResult) return null;
 
@@ -120,11 +125,11 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
             <RotateCcw className="w-4 h-4 mr-2" />
             Play Again
           </Button>
-          <Button variant="outline" className="w-full" onClick={() => router.push("/leaderboard")}>
+          <Button variant="outline" className="w-full" onClick={() => navigateTo("/leaderboard")}>
             <Trophy className="w-4 h-4 mr-2" />
             Leaderboard
           </Button>
-          <Button variant="ghost" className="w-full" onClick={() => router.push("/dashboard")}>
+          <Button variant="ghost" className="w-full" onClick={() => navigateTo("/dashboard")}>
             <LayoutDashboard className="w-4 h-4 mr-2" />
             Dashboard
           </Button>
