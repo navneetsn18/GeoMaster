@@ -16,9 +16,10 @@ interface WorldMapProps {
   disabled?: boolean;
   filterCodes?: Set<string>;
   reviewMode?: boolean;
+  capitalLabels?: Record<string, string>; // alpha2 → capital city name
 }
 
-function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: WorldMapProps) {
+function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode, capitalLabels }: WorldMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -184,6 +185,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
                 const isCorrect = guessedCorrectly.has(alpha2);
                 const isWrong = wrongGuesses.has(alpha2);
                 const color = isCorrect ? "#4ade80" : isWrong ? "#f87171" : "#cbd5e1";
+                const capital = capitalLabels?.[alpha2.toLowerCase()];
                 return (
                   <Annotation
                     key={geo.rsmKey + "-lbl"}
@@ -194,12 +196,13 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
                   >
                     <text
                       textAnchor="middle"
-                      fontSize={8}
-                      fill={color}
                       fontWeight={isCorrect || isWrong ? 700 : 400}
                       style={{ pointerEvents: "none", fontFamily: "sans-serif" }}
                     >
-                      {name}
+                      <tspan x="0" dy="0" fontSize={8} fill={color}>{name}</tspan>
+                      {capital && (
+                        <tspan x="0" dy="10" fontSize={6} fill={color} opacity={0.8}>{capital}</tspan>
+                      )}
                     </text>
                   </Annotation>
                 );

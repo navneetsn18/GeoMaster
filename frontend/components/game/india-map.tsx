@@ -89,6 +89,7 @@ interface IndiaMapProps {
   wrongGuesses: Set<string>;
   targetCode?: string;
   reviewMode?: boolean;
+  capitalLabels?: Record<string, string>; // stateCode → capital city name
 }
 
 const COLORS = {
@@ -105,6 +106,7 @@ function IndiaMapInner({
   guessedCorrectly,
   wrongGuesses,
   reviewMode,
+  capitalLabels,
 }: IndiaMapProps) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
@@ -203,6 +205,7 @@ function IndiaMapInner({
                     const isCorrect = guessedCorrectly.has(code);
                     const isWrong = wrongGuesses.has(code);
                     const color = isCorrect ? "#4ade80" : isWrong ? "#f87171" : "#cbd5e1";
+                    const capital = capitalLabels?.[code];
                     return (
                       <Annotation
                         key={geo.rsmKey + "-lbl"}
@@ -213,12 +216,13 @@ function IndiaMapInner({
                       >
                         <text
                           textAnchor="middle"
-                          fontSize={5}
-                          fill={color}
                           fontWeight={isCorrect || isWrong ? 700 : 400}
                           style={{ pointerEvents: "none", fontFamily: "sans-serif" }}
                         >
-                          {stateName}
+                          <tspan x="0" dy="0" fontSize={5} fill={color}>{stateName}</tspan>
+                          {capital && (
+                            <tspan x="0" dy="7" fontSize={4} fill={color} opacity={0.8}>{capital}</tspan>
+                          )}
                         </text>
                       </Annotation>
                     );

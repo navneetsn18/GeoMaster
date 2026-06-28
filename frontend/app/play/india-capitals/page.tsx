@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -50,6 +50,11 @@ export default function IndiaCapitalsPage() {
     resumeGame,
     resetGame,
   } = useGameStore();
+
+  const capitalLabels = useMemo(
+    () => Object.fromEntries(countries.map(c => [c.code.toLowerCase(), c.name])),
+    [countries]
+  );
 
   useEffect(() => {
     if (!getToken()) { router.replace("/login"); return; }
@@ -233,6 +238,7 @@ export default function IndiaCapitalsPage() {
           wrongGuesses={wrongGuesses}
           targetCode={currentCountry?.code.toLowerCase()}
           reviewMode={reviewMode}
+          capitalLabels={reviewMode ? capitalLabels : undefined}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 

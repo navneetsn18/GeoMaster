@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertCircle, Loader2, ArrowLeft } from "lucide-react";
@@ -50,6 +50,12 @@ export default function WorldCapitalsPage() {
     resumeGame,
     resetGame,
   } = useGameStore();
+
+  // code → capital city name (country.name IS the capital in capitals mode)
+  const capitalLabels = useMemo(
+    () => Object.fromEntries(countries.map(c => [c.code.toLowerCase(), c.name])),
+    [countries]
+  );
 
   useEffect(() => {
     if (!getToken()) { router.replace("/login"); return; }
@@ -225,6 +231,7 @@ export default function WorldCapitalsPage() {
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
           reviewMode={reviewMode}
+          capitalLabels={reviewMode ? capitalLabels : undefined}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 
