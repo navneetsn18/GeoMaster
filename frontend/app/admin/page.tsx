@@ -46,23 +46,28 @@ function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void 
   const toggleExpand = (id: string) =>
     setExpanded(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
 
-  const handleFlag = useCallback(async (sessionId: string, currentFlags: number) => {
+  const handleFlag = useCallback(async (sessionId: string) => {
     setActionLoading(sessionId + ":flag");
     try {
       await adminApi.flagSession(sessionId);
-      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: currentFlags + 1 } : s));
-      if (currentFlags + 1 >= 3) {
-        setError("3 flags reached — user has been auto-banned.");
+      let flaggedCount = 0;
+      setSessions(prev => {
+        const updated = prev.map(s => s.id === sessionId ? { ...s, flagCount: 1 } : s);
+        flaggedCount = updated.filter(s => s.flagCount > 0).length;
+        return updated;
+      });
+      if (flaggedCount >= 3) {
+        setError("3 different sessions flagged — user auto-banned, scores hidden from leaderboard.");
       }
     } catch { setError("Flag failed"); }
     finally { setActionLoading(null); }
   }, []);
 
-  const handleUnflag = useCallback(async (sessionId: string, currentFlags: number) => {
+  const handleUnflag = useCallback(async (sessionId: string) => {
     setActionLoading(sessionId + ":unflag");
     try {
       await adminApi.unflagSession(sessionId);
-      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: Math.max(0, currentFlags - 1) } : s));
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: 0 } : s));
     } catch { setError("Unflag failed"); }
     finally { setActionLoading(null); }
   }, []);
@@ -117,10 +122,8 @@ function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void 
           ) : sessions.map(s => {
             const isExpanded = expanded.has(s.id);
             const sus = suspicionScore(s);
-            const flagsLeft = Math.max(0, 3 - s.flagCount);
-
             return (
-              <div key={s.id} className={`border rounded-lg overflow-hidden ${s.flagCount >= 3 ? "border-red-500/50 bg-red-950/10" : s.flagCount > 0 ? "border-yellow-500/40 bg-yellow-950/10" : "border-border/60"}`}>
+              <div key={s.id} className={`border rounded-lg overflow-hidden ${s.flagCount > 0 ? "border-yellow-500/40 bg-yellow-950/10" : "border-border/60"}`}>
                 {/* Session row */}
                 <div className="flex items-center gap-3 p-3">
                   <button onClick={() => toggleExpand(s.id)} className="text-muted-foreground hover:text-foreground">
@@ -153,31 +156,31 @@ function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void 
                       </span>
                     )}
                     {s.flagCount > 0 && (
-                      <span className={`text-[10px] rounded px-1.5 py-0.5 font-bold border ${s.flagCount >= 3 ? "bg-red-500/30 text-red-300 border-red-500/50" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"}`}>
-                        {s.flagCount}/3 flags
+                      <span className="text-[10px] rounded px-1.5 py-0.5 font-bold border bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                        Flagged
                       </span>
                     )}
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${s.status === "COMPLETED" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-muted text-muted-foreground border-border"}`}>
                       {s.status === "COMPLETED" ? "Done" : s.status}
                     </span>
-                    {/* Flag/unflag */}
-                    {s.flagCount < 3 ? (
+                    {/* Flag/unflag — each session can only be flagged once */}
+                    {s.flagCount === 0 ? (
                       <button
-                        onClick={() => handleFlag(s.id, s.flagCount)}
+                        onClick={() => handleFlag(s.id)}
                         disabled={!!actionLoading}
                         className="p-1.5 rounded hover:bg-yellow-500/20 text-yellow-500 transition-colors disabled:opacity-40"
-                        title={`Flag (${flagsLeft} more = auto-ban)`}
+                        title="Flag this session"
                       >
                         <Flag className="w-3.5 h-3.5" />
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleUnflag(s.id, s.flagCount)}
+                        onClick={() => handleUnflag(s.id)}
                         disabled={!!actionLoading}
-                        className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors disabled:opacity-40"
+                        className="p-1.5 rounded hover:bg-muted text-yellow-400 transition-colors disabled:opacity-40"
                         title="Remove flag"
                       >
-                        <Flag className="w-3.5 h-3.5 opacity-40" />
+                        <Flag className="w-3.5 h-3.5" />
                       </button>
                     )}
                     <button
