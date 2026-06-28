@@ -100,6 +100,7 @@ export default function IndiaStatesPage() {
 
         if (isCorrect) {
           soundManager.playCorrect();
+          toast.success(currentCountry.name, { duration: 900 });
         } else {
           soundManager.playWrong();
           markWrongFlash(clickedCode);

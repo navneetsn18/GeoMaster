@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Trophy, Target, Flame, RotateCcw, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ interface ScoreModalProps {
 
 export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
   const { sessionResult, bestStreak, score, mapType } = useGameStore();
+  const router = useRouter();
 
   if (!sessionResult) return null;
 
@@ -119,17 +120,13 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
             <RotateCcw className="w-4 h-4 mr-2" />
             Play Again
           </Button>
-          <Button variant="outline" className="w-full" asChild>
-            <Link href="/leaderboard">
-              <Trophy className="w-4 h-4 mr-2" />
-              Leaderboard
-            </Link>
+          <Button variant="outline" className="w-full" onClick={() => router.push("/leaderboard")}>
+            <Trophy className="w-4 h-4 mr-2" />
+            Leaderboard
           </Button>
-          <Button variant="ghost" className="w-full" asChild>
-            <Link href="/dashboard">
-              <LayoutDashboard className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
+          <Button variant="ghost" className="w-full" onClick={() => router.push("/dashboard")}>
+            <LayoutDashboard className="w-4 h-4 mr-2" />
+            Dashboard
           </Button>
         </div>
       </DialogContent>

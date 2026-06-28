@@ -174,6 +174,17 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
         </Geographies>
       </ComposableMap>
 
+      {/* Hovered country name */}
+      {hoveredId && (() => {
+        const alpha2 = ISO_NUMERIC_TO_ALPHA2[hoveredId];
+        const name = alpha2 ? COUNTRY_NAMES[alpha2] : null;
+        return name ? (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/85 backdrop-blur-sm border border-border/40 px-3 py-1 rounded-full text-xs font-semibold pointer-events-none z-20 shadow-lg">
+            {name}
+          </div>
+        ) : null;
+      })()}
+
       {/* Drag hint */}
       <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/50 pointer-events-none select-none">
         Drag to rotate · Scroll to zoom

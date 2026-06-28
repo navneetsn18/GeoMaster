@@ -98,6 +98,7 @@ export default function WorldCapitalsPage() {
 
         if (isCorrect) {
           soundManager.playCorrect();
+          toast.success(currentCountry.name, { duration: 900 });
         } else {
           soundManager.playWrong();
           markWrongFlash(clickedAlpha2);

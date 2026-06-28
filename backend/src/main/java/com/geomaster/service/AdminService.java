@@ -172,17 +172,25 @@ public class AdminService {
     public void flagSession(String sessionId) {
         GameSession session = gameSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new SessionNotFoundException(sessionId));
-        session.setFlagCount(session.getFlagCount() + 1);
+
+        // Already flagged — prevent same session being counted multiple times
+        if (session.getFlagCount() >= 1) return;
+
+        session.setFlagCount(1);
         gameSessionRepository.save(session);
 
-        if (session.getFlagCount() >= 3) {
+        // Count distinct flagged sessions across this user (not flags on one session)
+        long flaggedCount = gameSessionRepository.countFlaggedSessionsByUserId(session.getUserId());
+
+        if (flaggedCount >= 3) {
             userRepository.findById(session.getUserId()).ifPresent(user -> {
                 if (!user.isBanned()) {
                     user.setBanned(true);
                     user.setBannedAt(Instant.now());
                     user.setBanReason("Auto-banned: 3 flagged sessions detected");
-                    gameSessionRepository.deleteByUserId(user.getId());
                     userRepository.save(user);
+                    // Hide from leaderboard — do NOT delete, history stays for user
+                    gameSessionRepository.hideAllByUserId(user.getId());
                 }
             });
         }
@@ -218,9 +226,9 @@ public class AdminService {
         user.setBanned(true);
         user.setBannedAt(Instant.now());
         user.setBanReason(reason);
-        // wipe all scores
-        gameSessionRepository.deleteByUserId(userId);
         userRepository.save(user);
+        // hide from leaderboard; history stays visible to user
+        gameSessionRepository.hideAllByUserId(userId);
         return UserRow.builder()
                 .id(user.getId())
                 .username(user.getUsername())

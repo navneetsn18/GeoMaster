@@ -459,6 +459,9 @@ function ShareDialog({ rawAvatarUrl, baseData, open, onClose }: {
         <p className="text-xs text-muted-foreground text-center mt-2">
           Post to Instagram, WhatsApp, Twitter — anywhere!
         </p>
+        <Button variant="ghost" className="w-full mt-1 text-muted-foreground" onClick={onClose}>
+          ← Back
+        </Button>
       </DialogContent>
     </Dialog>
   );

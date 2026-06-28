@@ -22,17 +22,25 @@ public interface GameSessionRepository extends JpaRepository<GameSession, String
      * If {@code since} is null all time is included (ALL_TIME); otherwise only sessions
      * completed after that instant are returned.
      */
-    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.mapType = :mapType ORDER BY gs.finalScore DESC")
+    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.hidden = false AND gs.mapType = :mapType ORDER BY gs.finalScore DESC")
     List<GameSession> findCompletedByMapTypeAllTime(@Param("mapType") String mapType, Pageable pageable);
 
-    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.mapType = :mapType AND gs.completedAt > :since ORDER BY gs.finalScore DESC")
+    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.hidden = false AND gs.mapType = :mapType AND gs.completedAt > :since ORDER BY gs.finalScore DESC")
     List<GameSession> findCompletedByMapTypeSince(@Param("mapType") String mapType, @Param("since") Instant since, Pageable pageable);
 
-    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.userId IN :userIds AND gs.mapType = :mapType ORDER BY gs.finalScore DESC")
+    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.hidden = false AND gs.userId IN :userIds AND gs.mapType = :mapType ORDER BY gs.finalScore DESC")
     List<GameSession> findCompletedByUserIdsAndMapTypeAllTime(@Param("userIds") List<String> userIds, @Param("mapType") String mapType, Pageable pageable);
 
-    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.userId IN :userIds AND gs.mapType = :mapType AND gs.completedAt > :since ORDER BY gs.finalScore DESC")
+    @Query("SELECT gs FROM GameSession gs WHERE gs.status = 'COMPLETED' AND gs.hidden = false AND gs.userId IN :userIds AND gs.mapType = :mapType AND gs.completedAt > :since ORDER BY gs.finalScore DESC")
     List<GameSession> findCompletedByUserIdsAndMapTypeSince(@Param("userIds") List<String> userIds, @Param("mapType") String mapType, @Param("since") Instant since, Pageable pageable);
+
+    @Query("SELECT COUNT(gs) FROM GameSession gs WHERE gs.userId = :userId AND gs.flagCount > 0")
+    long countFlaggedSessionsByUserId(@Param("userId") String userId);
+
+    @jakarta.transaction.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE GameSession gs SET gs.hidden = true WHERE gs.userId = :userId")
+    void hideAllByUserId(@Param("userId") String userId);
 
     Optional<GameSession> findByIdAndUserId(String id, String userId);
 

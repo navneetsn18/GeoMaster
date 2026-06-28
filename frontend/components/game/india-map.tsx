@@ -103,6 +103,7 @@ function IndiaMapInner({
   wrongGuesses,
 }: IndiaMapProps) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [geoError, setGeoError] = useState(false);
 
   const getFill = useCallback(
@@ -117,7 +118,12 @@ function IndiaMapInner({
   );
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-[#0d1526]">
+    <div className="relative w-full h-full flex items-center justify-center bg-[#0d1526]">
+      {hoveredName && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/85 backdrop-blur-sm border border-border/40 px-3 py-1 rounded-full text-xs font-semibold pointer-events-none z-20 shadow-lg">
+          {hoveredName}
+        </div>
+      )}
       {geoError ? (
         <div className="text-muted-foreground text-sm">
           Failed to load India map. Check your connection.
@@ -151,8 +157,8 @@ function IndiaMapInner({
                         if (disabled || !code) return;
                         onStateClick(code);
                       }}
-                      onMouseEnter={() => !disabled && setHovered(code)}
-                      onMouseLeave={() => setHovered(null)}
+                      onMouseEnter={() => { if (!disabled) { setHovered(code); setHoveredName(stateName); } }}
+                      onMouseLeave={() => { setHovered(null); setHoveredName(null); }}
                       style={{
                         default: {
                           fill,

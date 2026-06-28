@@ -83,6 +83,10 @@ public class GameSession {
     @Builder.Default
     private int flagCount = 0;
 
+    @Column(name = "hidden", nullable = false)
+    @Builder.Default
+    private boolean hidden = false;
+
     @PostLoad
     void syncCompleted() {
         this.completed = "COMPLETED".equals(this.status);
