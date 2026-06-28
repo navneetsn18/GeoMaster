@@ -29,7 +29,7 @@ function SuspicionBadge({ ms }: { ms: number }) {
   return <span className="text-muted-foreground text-xs">{formatMs(ms)}</span>;
 }
 
-function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
+function MatchesModal({ user, onClose, onUnbanned }: { user: AdminUser; onClose: () => void; onUnbanned?: (userId: string) => void }) {
   const [sessions, setSessions] = useState<AdminSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -66,11 +66,15 @@ function MatchesModal({ user, onClose }: { user: AdminUser; onClose: () => void 
   const handleUnflag = useCallback(async (sessionId: string) => {
     setActionLoading(sessionId + ":unflag");
     try {
-      await adminApi.unflagSession(sessionId);
+      const res = await adminApi.unflagSession(sessionId);
       setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, flagCount: 0 } : s));
+      if (res.unbanned) {
+        setSessions(prev => prev.map(s => ({ ...s, flagCount: 0 })));
+        onUnbanned?.(res.userId);
+      }
     } catch { setError("Unflag failed"); }
     finally { setActionLoading(null); }
-  }, []);
+  }, [onUnbanned]);
 
   const handleDelete = useCallback(async (sessionId: string) => {
     if (!confirm("Delete this match and remove it from the leaderboard?")) return;
@@ -318,6 +322,8 @@ export default function AdminPage() {
     try {
       await adminApi.unbanUser(u.id);
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, banned: false, banReason: undefined, bannedAt: undefined } : x));
+      // Close matches modal if open for this user so it reloads with reset flags on next open
+      if (matchesUser?.id === u.id) setMatchesUser(null);
     } catch { setError("Unban failed"); }
     finally { setActionLoading(null); }
   }
@@ -526,7 +532,11 @@ export default function AdminPage() {
 
       {/* Matches modal */}
       {matchesUser && (
-        <MatchesModal user={matchesUser} onClose={() => setMatchesUser(null)} />
+        <MatchesModal
+          user={matchesUser}
+          onClose={() => setMatchesUser(null)}
+          onUnbanned={(userId) => setUsers(prev => prev.map(u => u.id === userId ? { ...u, banned: false, banReason: undefined, bannedAt: undefined } : u))}
+        />
       )}
     </div>
   );

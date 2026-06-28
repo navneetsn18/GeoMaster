@@ -76,12 +76,11 @@ public class AdminController {
     }
 
     @PostMapping("/sessions/{id}/unflag")
-    public ResponseEntity<Map<String, String>> unflagSession(
+    public ResponseEntity<Map<String, Object>> unflagSession(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String id) {
         adminService.requireAdmin(userDetails.getUsername());
-        adminService.unflagSession(id);
-        return ResponseEntity.ok(Map.of("message", "Session unflagged"));
+        return ResponseEntity.ok(adminService.unflagSession(id));
     }
 
     @PostMapping("/users/{id}/ban")

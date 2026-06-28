@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Map;
@@ -197,11 +198,34 @@ public class AdminService {
     }
 
     @Transactional
-    public void unflagSession(String sessionId) {
+    public Map<String, Object> unflagSession(String sessionId) {
         GameSession session = gameSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new SessionNotFoundException(sessionId));
-        session.setFlagCount(Math.max(0, session.getFlagCount() - 1));
+        session.setFlagCount(0);
         gameSessionRepository.save(session);
+
+        long flaggedCount = gameSessionRepository.countFlaggedSessionsByUserId(session.getUserId());
+
+        boolean wasUnbanned = false;
+        if (flaggedCount < 3) {
+            wasUnbanned = userRepository.findById(session.getUserId()).map(user -> {
+                if (user.isBanned() && "Auto-banned: 3 flagged sessions detected".equals(user.getBanReason())) {
+                    user.setBanned(false);
+                    user.setBannedAt(null);
+                    user.setBanReason(null);
+                    userRepository.save(user);
+                    gameSessionRepository.unhideAllByUserId(user.getId());
+                    return true;
+                }
+                return false;
+            }).orElse(false);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "Session unflagged");
+        result.put("unbanned", wasUnbanned);
+        result.put("userId", session.getUserId());
+        return result;
     }
 
     @Transactional
@@ -248,6 +272,9 @@ public class AdminService {
         user.setBannedAt(null);
         user.setBanReason(null);
         userRepository.save(user);
+        // Reset all flags and restore leaderboard visibility
+        gameSessionRepository.resetFlagsByUserId(userId);
+        gameSessionRepository.unhideAllByUserId(userId);
     }
 
     @Transactional

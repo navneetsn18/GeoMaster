@@ -42,6 +42,16 @@ public interface GameSessionRepository extends JpaRepository<GameSession, String
     @Query("UPDATE GameSession gs SET gs.hidden = true WHERE gs.userId = :userId")
     void hideAllByUserId(@Param("userId") String userId);
 
+    @jakarta.transaction.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE GameSession gs SET gs.hidden = false WHERE gs.userId = :userId")
+    void unhideAllByUserId(@Param("userId") String userId);
+
+    @jakarta.transaction.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE GameSession gs SET gs.flagCount = 0 WHERE gs.userId = :userId")
+    void resetFlagsByUserId(@Param("userId") String userId);
+
     Optional<GameSession> findByIdAndUserId(String id, String userId);
 
     @Query("SELECT COUNT(gs) FROM GameSession gs WHERE gs.userId = :userId AND gs.status = 'COMPLETED'")

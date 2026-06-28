@@ -289,8 +289,9 @@ export const adminApi = {
   flagSession: async (sessionId: string): Promise<void> => {
     await api.post(`/admin/sessions/${sessionId}/flag`);
   },
-  unflagSession: async (sessionId: string): Promise<void> => {
-    await api.post(`/admin/sessions/${sessionId}/unflag`);
+  unflagSession: async (sessionId: string): Promise<{ unbanned: boolean; userId: string }> => {
+    const { data } = await api.post(`/admin/sessions/${sessionId}/unflag`);
+    return data;
   },
 };
 
