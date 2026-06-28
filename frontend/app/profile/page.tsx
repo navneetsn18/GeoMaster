@@ -26,6 +26,7 @@ import { getStoredUser, getToken, storeUser } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/avatar";
 import { formatScore, formatAccuracy } from "@/lib/utils";
 import { UserMatchHistoryModal } from "@/components/UserMatchHistoryModal";
+import { computeBadges } from "@/lib/badges";
 import type { UserStats, GameModeStats, Following, User } from "@/types";
 
 const MODE_LABELS: Record<string, string> = {
@@ -311,9 +312,24 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <Badge variant="secondary" className="mt-1.5">
-            Geography Explorer
-          </Badge>
+          {stats && (() => {
+            const badges = computeBadges(stats);
+            return badges.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {badges.map((b) => (
+                  <span
+                    key={b.label}
+                    title={b.description}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${b.bg} ${b.text} ${b.border}`}
+                  >
+                    {b.icon} {b.label}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <Badge variant="secondary" className="mt-1.5">Geography Explorer</Badge>
+            );
+          })()}
           <p className="text-xs text-muted-foreground mt-1">
             Tap username/email to edit · Tap avatar to change photo
           </p>
