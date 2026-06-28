@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Trophy, Target, Flame, RotateCcw, LayoutDashboard } from "lucide-react";
+import { Trophy, Target, Flame, RotateCcw, LayoutDashboard, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,9 +18,10 @@ import { ShareScoreButton } from "@/components/game/share-card";
 interface ScoreModalProps {
   open: boolean;
   onPlayAgain: () => void;
+  onReview: () => void;
 }
 
-export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
+export function ScoreModal({ open, onPlayAgain, onReview }: ScoreModalProps) {
   const { sessionResult, bestStreak, score, mapType, resetGame } = useGameStore();
   const router = useRouter();
 
@@ -122,6 +123,10 @@ export function ScoreModal({ open, onPlayAgain }: ScoreModalProps) {
         {/* Actions */}
         <div className="flex flex-col gap-2">
           <ShareScoreButton className="w-full" />
+          <Button variant="secondary" className="w-full" onClick={onReview}>
+            <Map className="w-4 h-4 mr-2" />
+            Review Answers on Map
+          </Button>
           <Button className="w-full" onClick={onPlayAgain} size="lg">
             <RotateCcw className="w-4 h-4 mr-2" />
             Play Again

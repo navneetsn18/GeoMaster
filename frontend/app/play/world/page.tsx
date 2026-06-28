@@ -27,6 +27,7 @@ export default function WorldGamePage() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [isGuessing, setIsGuessing] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
 
   const {
     sessionId,
@@ -166,9 +167,9 @@ export default function WorldGamePage() {
   );
 
   const handlePlayAgain = () => {
-    // Return to setup screen so player can change timer
     resetGame();
     setSetupDone(false);
+    setReviewMode(false);
   };
 
   const handlePause = () => {
@@ -308,10 +309,26 @@ export default function WorldGamePage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Review overlay — inside the relative map div so absolute positioning works */}
+        {reviewMode && isComplete && (
+          <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border/60 shadow-md">
+            <Button size="sm" variant="ghost" onClick={() => setReviewMode(false)}>
+              ← Back to Results
+            </Button>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />Correct</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />Wrong</span>
+            </div>
+            <Button size="sm" onClick={() => { resetGame(); window.location.href = "/dashboard"; }}>
+              Dashboard
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Score modal */}
-      <ScoreModal open={isComplete} onPlayAgain={handlePlayAgain} />
+      <ScoreModal open={isComplete && !reviewMode} onPlayAgain={handlePlayAgain} onReview={() => setReviewMode(true)} />
     </div>
   );
 }

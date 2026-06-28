@@ -35,6 +35,7 @@ export default function ContinentGamePage() {
   const mapType = CONTINENT_MAP[continent?.toLowerCase() ?? ""] ?? "WORLD";
 
   const [setupDone, setSetupDone] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [isGuessing, setIsGuessing] = useState(false);
@@ -276,11 +277,23 @@ export default function ContinentGamePage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {reviewMode && isComplete && (
+          <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-4 py-3 bg-background/95 backdrop-blur-sm border-b border-border/60 shadow-md">
+            <Button size="sm" variant="ghost" onClick={() => setReviewMode(false)}>← Back to Results</Button>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />Correct</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />Wrong</span>
+            </div>
+            <Button size="sm" onClick={() => { resetGame(); window.location.href = "/dashboard"; }}>Dashboard</Button>
+          </div>
+        )}
       </div>
 
       <ScoreModal
-        open={isComplete}
-        onPlayAgain={() => { resetGame(); setSetupDone(false); }}
+        open={isComplete && !reviewMode}
+        onPlayAgain={() => { resetGame(); setSetupDone(false); setReviewMode(false); }}
+        onReview={() => setReviewMode(true)}
       />
     </div>
   );
