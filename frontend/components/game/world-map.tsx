@@ -25,6 +25,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
   const guessedCorrectly = useGameStore((s) => s.guessedCorrectly);
   const wrongGuesses = useGameStore((s) => s.wrongGuesses);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   // Globe rotation + zoom
   const [rotation, setRotation] = useState<[number, number, number]>([-10, -20, 0]);
@@ -105,6 +106,15 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
   }, []);
 
 
+  // Returns true if [lon,lat] is on the visible hemisphere given current rotation
+  const isOnFrontHemisphere = (lon: number, lat: number): boolean => {
+    const toRad = (d: number) => d * Math.PI / 180;
+    const λ = toRad(lon), φ = toRad(lat);
+    const λ0 = toRad(-rotation[0]), φ0 = toRad(-rotation[1]);
+    // dot product > 0.1 excludes limb labels that appear distorted at the edge
+    return Math.sin(φ0) * Math.sin(φ) + Math.cos(φ0) * Math.cos(φ) * Math.cos(λ - λ0) > 0.1;
+  };
+
   return (
     <div
       ref={containerRef}
@@ -113,7 +123,11 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
+      onPointerLeave={(e) => { onPointerUp(); setMousePos(null); }}
+      onMouseMove={(e) => {
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      }}
     >
       <ComposableMap
         projection="geoOrthographic"
@@ -171,6 +185,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
                 if (!name) return null;
                 if (filterCodes && !filterCodes.has(alpha2)) return null;
                 const centroid = geoCentroid(geo);
+                if (!isOnFrontHemisphere(centroid[0], centroid[1])) return null;
                 const isCorrect = guessedCorrectly.has(alpha2);
                 const isWrong = wrongGuesses.has(alpha2);
                 const color = isCorrect ? "#4ade80" : isWrong ? "#f87171" : "#cbd5e1";
@@ -199,12 +214,15 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
         </Geographies>
       </ComposableMap>
 
-      {/* Hovered country name */}
-      {hoveredId && (() => {
+      {/* Hovered country name — follows cursor */}
+      {hoveredId && mousePos && (() => {
         const alpha2 = ISO_NUMERIC_TO_ALPHA2[hoveredId];
         const name = alpha2 ? COUNTRY_NAMES[alpha2] : null;
         return name ? (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/85 backdrop-blur-sm border border-border/40 px-3 py-1 rounded-full text-xs font-semibold pointer-events-none z-20 shadow-lg">
+          <div
+            className="absolute bg-background/85 backdrop-blur-sm border border-border/40 px-3 py-1 rounded-full text-xs font-semibold pointer-events-none z-20 shadow-lg -translate-x-1/2"
+            style={{ left: mousePos.x, top: mousePos.y - 38 }}
+          >
             {name}
           </div>
         ) : null;
