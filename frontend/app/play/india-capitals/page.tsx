@@ -91,7 +91,11 @@ export default function IndiaCapitalsPage() {
       if (!currentCountry) return;
       if (guessedCorrectly.has(clickedCode)) return;
 
-      const isCorrect = clickedCode.toLowerCase() === currentCountry.code.toLowerCase();
+      const isExact = clickedCode.toLowerCase() === currentCountry.code.toLowerCase();
+      // Accept alternative states sharing the same capital (e.g. Haryana/Punjab/Chandigarh UT all → Chandigarh)
+      const clickedEntry = countries.find(c => c.code.toLowerCase() === clickedCode.toLowerCase());
+      const isSameCapital = !isExact && !!clickedEntry && clickedEntry.name === currentCountry.name;
+      const isCorrect = isExact || isSameCapital;
       const timeTaken = countryStartTime ? Date.now() - countryStartTime : 0;
       setIsGuessing(true);
 
@@ -101,7 +105,9 @@ export default function IndiaCapitalsPage() {
           isCorrect,
           timeTakenMs: timeTaken,
         });
-        submitGuess(clickedCode, result);
+        // When alternative state clicked, mark the target (not the click) green so it
+        // doesn't block future questions about the clicked state
+        submitGuess(isSameCapital ? currentCountry.code.toLowerCase() : clickedCode, result);
 
         if (isCorrect) {
           soundManager.playCorrect();
