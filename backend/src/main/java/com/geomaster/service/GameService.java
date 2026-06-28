@@ -32,6 +32,7 @@ public class GameService {
     private final GuessRecordRepository guessRecordRepository;
     private final UserRepository userRepository;
     private final CountryDataService countryDataService;
+    private final KeepAliveService keepAliveService;
 
     @Transactional
     public GameSessionDto startSession(String userEmail, StartSessionRequest request) {
@@ -48,6 +49,7 @@ public class GameService {
                 .build();
 
         session = gameSessionRepository.save(session);
+        keepAliveService.signalActivity();
 
         List<CountryDataService.Country> countries =
                 countryDataService.getCountriesForMapType(request.getMapType(), request.getRegionCode());

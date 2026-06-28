@@ -69,6 +69,8 @@ public interface GameSessionRepository extends JpaRepository<GameSession, String
 
     long countByStatus(String status);
 
+    boolean existsByStartedAtAfter(Instant startedAt);
+
     void deleteByUserId(String userId);
 
     @Query(value = "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (completed_at - started_at))), 0) " +

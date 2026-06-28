@@ -1,0 +1,39 @@
+name: Keep Render alive
+
+on:
+  schedule:
+    # Every 13 minutes — under Render's 15-min idle threshold
+    - cron: '*/13 * * * *'
+  workflow_dispatch:
+
+# GITHUB_TOKEN needs write access to update the KEEP_ALIVE variable
+permissions:
+  actions: write
+
+jobs:
+  ping:
+    # Skip entirely when no recent activity — Render stays sleeping
+    if: vars.KEEP_ALIVE == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping backend
+        id: ping
+        run: |
+          RESPONSE=$(curl -sf --max-time 10 \
+            "${{ secrets.RENDER_BACKEND_URL }}/api/health/ping" 2>/dev/null \
+            || echo '{"shouldKeepAlive":false}')
+          echo "response=$RESPONSE"
+          echo "should_keep=$(echo $RESPONSE | grep -o '"shouldKeepAlive":true' | wc -l | tr -d ' ')" >> $GITHUB_OUTPUT
+
+      - name: Disable keep-alive if idle 24h
+        if: steps.ping.outputs.should_keep == '0'
+        run: |
+          curl -sf -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            -d '{"value":"false"}' \
+            "https://api.github.com/repos/${{ github.repository }}/actions/variables/KEEP_ALIVE"
+          echo "No activity in 24h — KEEP_ALIVE set to false, Render will sleep"

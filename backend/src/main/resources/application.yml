@@ -4,6 +4,10 @@ app:
     expiration: 604800000  # 7 days in ms
   upload-path: ${UPLOAD_PATH:/app/uploads}
 
+github:
+  pat: ${GITHUB_PAT:}
+  repo: ${GITHUB_REPO:}
+
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
   api-key: ${CLOUDINARY_API_KEY:}
