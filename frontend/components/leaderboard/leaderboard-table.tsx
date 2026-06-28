@@ -145,15 +145,13 @@ export function LeaderboardTable({
                 </td>
                 <td className="py-3 px-2 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    {!isMe && (
-                      <button
-                        onClick={() => setHistoryTarget({ id: entry.userId, username: entry.username })}
-                        className="text-[11px] text-muted-foreground hover:text-primary transition-colors px-1.5 py-0.5 rounded"
-                        title="View matches"
-                      >
-                        Matches
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setHistoryTarget({ id: entry.userId, username: entry.username })}
+                      className="text-[11px] text-muted-foreground hover:text-primary transition-colors px-1.5 py-0.5 rounded"
+                      title="View matches"
+                    >
+                      {isMe ? "My Matches" : "Matches"}
+                    </button>
                     <ShareEntryButton entry={entry} />
                   </div>
                 </td>
