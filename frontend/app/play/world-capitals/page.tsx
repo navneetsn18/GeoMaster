@@ -224,6 +224,7 @@ export default function WorldCapitalsPage() {
         <WorldMap
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
+          reviewMode={reviewMode}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 

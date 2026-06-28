@@ -232,6 +232,7 @@ export default function IndiaCapitalsPage() {
           guessedCorrectly={guessedCorrectly}
           wrongGuesses={wrongGuesses}
           targetCode={currentCountry?.code.toLowerCase()}
+          reviewMode={reviewMode}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 

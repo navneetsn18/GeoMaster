@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useState, useCallback, useRef, useEffect } from "react";
-import { ComposableMap, Geographies, Geography, Sphere, Graticule } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Sphere, Graticule, Annotation } from "react-simple-maps";
+import { geoCentroid } from "d3-geo";
 import { useTheme } from "next-themes";
 import { ISO_NUMERIC_TO_ALPHA2, COUNTRY_NAMES } from "@/lib/country-codes";
 import { useGameStore } from "@/lib/game-store";
@@ -14,9 +15,10 @@ interface WorldMapProps {
   onCountryClick: (alpha2Code: string) => void;
   disabled?: boolean;
   filterCodes?: Set<string>;
+  reviewMode?: boolean;
 }
 
-function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps) {
+function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: WorldMapProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -31,10 +33,10 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
   const containerRef = useRef<HTMLDivElement>(null);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
-    if (disabled) return;
+    if (disabled && !reviewMode) return;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     dragRef.current = { x: e.clientX, y: e.clientY, rot: rotation, moved: false };
-  }, [disabled, rotation]);
+  }, [disabled, reviewMode, rotation]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return;
@@ -124,43 +126,76 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes }: WorldMapProps)
         <Graticule stroke={isDark ? "#1e3a5f44" : "#93c5fd44"} strokeWidth={0.4} />
 
         <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => {
-              const alpha2 = ISO_NUMERIC_TO_ALPHA2[geo.id as string];
-              const isCorrect = alpha2 ? guessedCorrectly.has(alpha2) : false;
-              const isFiltered = !!(filterCodes && alpha2 && !filterCodes.has(alpha2));
+          {({ geographies }) => (
+            <>
+              {geographies.map((geo) => {
+                const alpha2 = ISO_NUMERIC_TO_ALPHA2[geo.id as string];
+                const isCorrect = alpha2 ? guessedCorrectly.has(alpha2) : false;
+                const isFiltered = !!(filterCodes && alpha2 && !filterCodes.has(alpha2));
 
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  fill={getFill(geo.id as string)}
-                  stroke={getStroke(geo.id as string)}
-                  strokeWidth={0.4}
-                  style={{
-                    default: {
-                      outline: "none",
-                      cursor: disabled || isCorrect || isFiltered ? "default" : "pointer",
-                      transition: "fill 0.2s ease",
-                    },
-                    hover: {
-                      outline: "none",
-                      fill: disabled || isCorrect || isFiltered
-                        ? getFill(geo.id as string)
-                        : "#6366f1",
-                      cursor: disabled || isCorrect || isFiltered ? "default" : "pointer",
-                    },
-                    pressed: { outline: "none", fill: "#4f46e5" },
-                  }}
-                  onMouseEnter={() => {
-                    if (!disabled && !isCorrect && !isFiltered) setHoveredId(geo.id as string);
-                  }}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => handleClick({ id: geo.id as string })}
-                />
-              );
-            })
-          }
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill={getFill(geo.id as string)}
+                    stroke={getStroke(geo.id as string)}
+                    strokeWidth={0.4}
+                    style={{
+                      default: {
+                        outline: "none",
+                        cursor: disabled || isCorrect || isFiltered ? "default" : "pointer",
+                        transition: "fill 0.2s ease",
+                      },
+                      hover: {
+                        outline: "none",
+                        fill: disabled || isCorrect || isFiltered
+                          ? getFill(geo.id as string)
+                          : "#6366f1",
+                        cursor: disabled || isCorrect || isFiltered ? "default" : "pointer",
+                      },
+                      pressed: { outline: "none", fill: "#4f46e5" },
+                    }}
+                    onMouseEnter={() => {
+                      if (!disabled && !isCorrect && !isFiltered) setHoveredId(geo.id as string);
+                    }}
+                    onMouseLeave={() => setHoveredId(null)}
+                    onClick={() => handleClick({ id: geo.id as string })}
+                  />
+                );
+              })}
+
+              {reviewMode && geographies.map((geo) => {
+                const alpha2 = ISO_NUMERIC_TO_ALPHA2[geo.id as string];
+                if (!alpha2) return null;
+                const name = COUNTRY_NAMES[alpha2];
+                if (!name) return null;
+                if (filterCodes && !filterCodes.has(alpha2)) return null;
+                const centroid = geoCentroid(geo);
+                const isCorrect = guessedCorrectly.has(alpha2);
+                const isWrong = wrongGuesses.has(alpha2);
+                const color = isCorrect ? "#4ade80" : isWrong ? "#f87171" : "#cbd5e1";
+                return (
+                  <Annotation
+                    key={geo.rsmKey + "-lbl"}
+                    subject={centroid}
+                    dx={0}
+                    dy={0}
+                    connectorProps={{}}
+                  >
+                    <text
+                      textAnchor="middle"
+                      fontSize={8}
+                      fill={color}
+                      fontWeight={isCorrect || isWrong ? 700 : 400}
+                      style={{ pointerEvents: "none", fontFamily: "sans-serif" }}
+                    >
+                      {name}
+                    </text>
+                  </Annotation>
+                );
+              })}
+            </>
+          )}
         </Geographies>
       </ComposableMap>
 

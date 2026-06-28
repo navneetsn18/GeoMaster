@@ -234,6 +234,7 @@ export default function IndiaStatesPage() {
           guessedCorrectly={guessedCorrectly}
           wrongGuesses={wrongGuesses}
           targetCode={currentCountry?.code.toLowerCase()}
+          reviewMode={reviewMode}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 

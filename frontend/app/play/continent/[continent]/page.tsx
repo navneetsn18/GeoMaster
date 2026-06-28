@@ -237,6 +237,7 @@ export default function ContinentGamePage() {
           onCountryClick={handleCountryClick}
           disabled={isGuessing || isPaused || isComplete}
           filterCodes={new Set(countries.map((c) => c.code.toLowerCase()))}
+          reviewMode={reviewMode}
         />
         <SkipButton onSkip={handleSkip} disabled={isGuessing || isPaused || isComplete} />
 

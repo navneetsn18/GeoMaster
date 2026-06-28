@@ -6,7 +6,9 @@ import {
   Geographies,
   Geography,
   ZoomableGroup,
+  Annotation,
 } from "react-simple-maps";
+import { geoCentroid } from "d3-geo";
 
 const GEO_URL =
   "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson";
@@ -86,6 +88,7 @@ interface IndiaMapProps {
   guessedCorrectly: Set<string>;
   wrongGuesses: Set<string>;
   targetCode?: string;
+  reviewMode?: boolean;
 }
 
 const COLORS = {
@@ -101,6 +104,7 @@ function IndiaMapInner({
   disabled,
   guessedCorrectly,
   wrongGuesses,
+  reviewMode,
 }: IndiaMapProps) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
@@ -139,53 +143,88 @@ function IndiaMapInner({
               geography={GEO_URL}
               onError={() => setGeoError(true)}
             >
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  const stateName: string =
-                    geo.properties?.ST_NM ??
-                    geo.properties?.NAME_1 ??
-                    geo.properties?.name ??
-                    "";
-                  const code = stateNameToCode(stateName) ?? "";
-                  const fill = getFill(code);
+              {({ geographies }) => (
+                <>
+                  {geographies.map((geo) => {
+                    const stateName: string =
+                      geo.properties?.ST_NM ??
+                      geo.properties?.NAME_1 ??
+                      geo.properties?.name ??
+                      "";
+                    const code = stateNameToCode(stateName) ?? "";
+                    const fill = getFill(code);
 
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onClick={() => {
-                        if (disabled || !code) return;
-                        onStateClick(code);
-                      }}
-                      onMouseEnter={() => { if (!disabled) { setHovered(code); setHoveredName(stateName); } }}
-                      onMouseLeave={() => { setHovered(null); setHoveredName(null); }}
-                      style={{
-                        default: {
-                          fill,
-                          stroke: COLORS.stroke,
-                          strokeWidth: 0.5,
-                          outline: "none",
-                          cursor: disabled || !code ? "default" : "pointer",
-                          transition: "fill 0.15s ease",
-                        },
-                        hover: {
-                          fill: disabled ? fill : COLORS.hover,
-                          stroke: COLORS.stroke,
-                          strokeWidth: 0.5,
-                          outline: "none",
-                          cursor: disabled || !code ? "default" : "pointer",
-                        },
-                        pressed: {
-                          fill,
-                          stroke: COLORS.stroke,
-                          strokeWidth: 0.5,
-                          outline: "none",
-                        },
-                      }}
-                    />
-                  );
-                })
-              }
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        onClick={() => {
+                          if (disabled || !code) return;
+                          onStateClick(code);
+                        }}
+                        onMouseEnter={() => { if (!disabled) { setHovered(code); setHoveredName(stateName); } }}
+                        onMouseLeave={() => { setHovered(null); setHoveredName(null); }}
+                        style={{
+                          default: {
+                            fill,
+                            stroke: COLORS.stroke,
+                            strokeWidth: 0.5,
+                            outline: "none",
+                            cursor: disabled || !code ? "default" : "pointer",
+                            transition: "fill 0.15s ease",
+                          },
+                          hover: {
+                            fill: disabled ? fill : COLORS.hover,
+                            stroke: COLORS.stroke,
+                            strokeWidth: 0.5,
+                            outline: "none",
+                            cursor: disabled || !code ? "default" : "pointer",
+                          },
+                          pressed: {
+                            fill,
+                            stroke: COLORS.stroke,
+                            strokeWidth: 0.5,
+                            outline: "none",
+                          },
+                        }}
+                      />
+                    );
+                  })}
+
+                  {reviewMode && geographies.map((geo) => {
+                    const stateName: string =
+                      geo.properties?.ST_NM ??
+                      geo.properties?.NAME_1 ??
+                      geo.properties?.name ??
+                      "";
+                    const code = stateNameToCode(stateName) ?? "";
+                    if (!stateName) return null;
+                    const centroid = geoCentroid(geo);
+                    const isCorrect = guessedCorrectly.has(code);
+                    const isWrong = wrongGuesses.has(code);
+                    const color = isCorrect ? "#4ade80" : isWrong ? "#f87171" : "#cbd5e1";
+                    return (
+                      <Annotation
+                        key={geo.rsmKey + "-lbl"}
+                        subject={centroid}
+                        dx={0}
+                        dy={0}
+                        connectorProps={{}}
+                      >
+                        <text
+                          textAnchor="middle"
+                          fontSize={5}
+                          fill={color}
+                          fontWeight={isCorrect || isWrong ? 700 : 400}
+                          style={{ pointerEvents: "none", fontFamily: "sans-serif" }}
+                        >
+                          {stateName}
+                        </text>
+                      </Annotation>
+                    );
+                  })}
+                </>
+              )}
             </Geographies>
           </ZoomableGroup>
         </ComposableMap>
