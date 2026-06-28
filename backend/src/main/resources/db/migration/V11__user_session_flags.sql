@@ -1,5 +1,5 @@
 CREATE TABLE user_session_flags (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(36) PRIMARY KEY,
     session_id VARCHAR(36) NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
     user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

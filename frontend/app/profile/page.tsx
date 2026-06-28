@@ -406,7 +406,8 @@ export default function ProfilePage() {
             {following.map((person) => (
               <Card key={person.id} className={`transition-colors ${person.banned ? "border-red-500/40 bg-red-950/10" : "hover:border-primary/40"}`}>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
+                  {/* Avatar + username row */}
+                  <div className="flex items-center gap-3 mb-2">
                     <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 ${person.banned ? "opacity-40 grayscale" : ""}`}>
                       <img
                         src={getAvatarUrl(person.id, person.avatarUrl)}
@@ -415,35 +416,36 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <p className={`font-semibold truncate ${person.banned ? "line-through text-muted-foreground" : ""}`}>{person.username}</p>
-                        {person.banned && (
-                          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded">
-                            Banned
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      {!person.banned && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs text-muted-foreground hover:text-primary px-2"
-                          onClick={() => setHistoryTarget({ id: person.id, username: person.username })}
-                        >
-                          Matches
-                        </Button>
+                      <p className={`font-semibold truncate ${person.banned ? "line-through text-muted-foreground" : ""}`}>
+                        {person.username}
+                      </p>
+                      {person.banned && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded">
+                          Banned
+                        </span>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-muted-foreground hover:text-destructive px-2"
-                        onClick={() => handleUnfollow(person.username)}
-                      >
-                        Unfollow
-                      </Button>
                     </div>
+                  </div>
+                  {/* Action buttons row */}
+                  <div className="flex gap-1.5 mb-3">
+                    {!person.banned && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-xs gap-1.5 h-7"
+                        onClick={() => setHistoryTarget({ id: person.id, username: person.username })}
+                      >
+                        🏟️ Matches
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`text-xs gap-1.5 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 ${person.banned ? "flex-1" : ""}`}
+                      onClick={() => handleUnfollow(person.username)}
+                    >
+                      ✕ Unfollow
+                    </Button>
                   </div>
                   {person.banned ? (
                     <p className="text-xs text-red-400/70 italic">Account suspended by admin.</p>
