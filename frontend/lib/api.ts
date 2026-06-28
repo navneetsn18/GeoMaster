@@ -203,6 +203,35 @@ export const userApi = {
     );
     return data;
   },
+
+  getPublicHistory: async (userId: string, limit = 20): Promise<import("@/types").RecentGame[]> => {
+    const { data } = await api.get<{ content: import("@/types").RecentGame[] }>(
+      `/user/users/${userId}/history`,
+      { params: { size: limit } }
+    );
+    return data.content ?? [];
+  },
+
+  getSessionGuesses: async (sessionId: string): Promise<import("@/types").GuessItem[]> => {
+    const { data } = await api.get<import("@/types").GuessItem[]>(
+      `/user/sessions/${sessionId}/guesses`
+    );
+    return data;
+  },
+
+  flagUserSession: async (sessionId: string): Promise<{ flagged: boolean; count: number }> => {
+    const { data } = await api.post<{ flagged: boolean; count: number }>(
+      `/user/sessions/${sessionId}/user-flag`
+    );
+    return data;
+  },
+
+  unflagUserSession: async (sessionId: string): Promise<{ flagged: boolean; count: number }> => {
+    const { data } = await api.delete<{ flagged: boolean; count: number }>(
+      `/user/sessions/${sessionId}/user-flag`
+    );
+    return data;
+  },
 };
 
 // ─── Admin ─────────────────────────────────────────────────────────────────────
@@ -227,6 +256,7 @@ export interface AdminSession {
   startedAt?: string;
   completedAt?: string;
   flagCount: number;
+  userFlagCount: number;
   guesses: AdminGuess[];
 }
 

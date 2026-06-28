@@ -101,7 +101,19 @@ export interface RecentGame {
   accuracy: number;
   correctCount: number;
   totalCount: number;
+  bestStreak?: number;
   playedAt: string;
+  userFlagCount?: number;
+  myFlag?: boolean;
+}
+
+export interface GuessItem {
+  id: string;
+  countryCode: string;
+  correct: boolean;
+  timeTakenMs: number;
+  pointsEarned: number;
+  guessedAt?: string;
 }
 
 export interface Following {

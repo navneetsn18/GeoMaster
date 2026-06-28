@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatScore, formatAccuracy, formatDate, getRankBadgeColor } from "@/lib/utils";
 import { getStoredUser } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/avatar";
 import { ShareEntryButton } from "@/components/game/share-card";
+import { UserMatchHistoryModal } from "@/components/UserMatchHistoryModal";
 import type { LeaderboardEntry } from "@/types";
 
 interface LeaderboardTableProps {
@@ -37,6 +39,7 @@ export function LeaderboardTable({
   isLoading,
 }: LeaderboardTableProps) {
   const me = getStoredUser();
+  const [historyTarget, setHistoryTarget] = useState<{ id: string; username: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -62,6 +65,7 @@ export function LeaderboardTable({
   }
 
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
@@ -140,7 +144,18 @@ export function LeaderboardTable({
                   {formatDate(entry.date)}
                 </td>
                 <td className="py-3 px-2 text-right">
-                  <ShareEntryButton entry={entry} />
+                  <div className="flex items-center justify-end gap-1">
+                    {!isMe && (
+                      <button
+                        onClick={() => setHistoryTarget({ id: entry.userId, username: entry.username })}
+                        className="text-[11px] text-muted-foreground hover:text-primary transition-colors px-1.5 py-0.5 rounded"
+                        title="View matches"
+                      >
+                        Matches
+                      </button>
+                    )}
+                    <ShareEntryButton entry={entry} />
+                  </div>
                 </td>
               </tr>
             );
@@ -148,5 +163,14 @@ export function LeaderboardTable({
         </tbody>
       </table>
     </div>
+
+    {historyTarget && (
+      <UserMatchHistoryModal
+        userId={historyTarget.id}
+        username={historyTarget.username}
+        onClose={() => setHistoryTarget(null)}
+      />
+    )}
+    </>
   );
 }

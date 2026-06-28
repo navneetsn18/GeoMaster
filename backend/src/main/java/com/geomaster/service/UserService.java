@@ -6,9 +6,12 @@ import com.geomaster.dto.response.UserDto;
 import com.geomaster.model.Friendship;
 import com.geomaster.model.GameSession;
 import com.geomaster.model.User;
+import com.geomaster.model.UserSessionFlag;
 import com.geomaster.repository.FriendshipRepository;
 import com.geomaster.repository.GameSessionRepository;
+import com.geomaster.repository.GuessRecordRepository;
 import com.geomaster.repository.UserRepository;
+import com.geomaster.repository.UserSessionFlagRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,6 +41,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final GameSessionRepository gameSessionRepository;
     private final FriendshipRepository friendshipRepository;
+    private final UserSessionFlagRepository userFlagRepository;
+    private final GuessRecordRepository guessRecordRepository;
 
     @Value("${app.upload-path:/app/uploads}")
     private String uploadPath;
@@ -47,10 +52,14 @@ public class UserService {
 
     public UserService(UserRepository userRepository,
                        GameSessionRepository gameSessionRepository,
-                       FriendshipRepository friendshipRepository) {
+                       FriendshipRepository friendshipRepository,
+                       UserSessionFlagRepository userFlagRepository,
+                       GuessRecordRepository guessRecordRepository) {
         this.userRepository = userRepository;
         this.gameSessionRepository = gameSessionRepository;
         this.friendshipRepository = friendshipRepository;
+        this.userFlagRepository = userFlagRepository;
+        this.guessRecordRepository = guessRecordRepository;
     }
 
     @Data
@@ -101,14 +110,29 @@ public class UserService {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SessionSummary {
-        private String sessionId;   // matches frontend RecentGame.sessionId
+        private String sessionId;
         private String mapType;
-        private int score;          // matches frontend RecentGame.score
+        private int score;
         private int correctCount;
         private int totalCount;
         private double accuracy;
         private int bestStreak;
-        private String playedAt;    // matches frontend RecentGame.playedAt
+        private String playedAt;
+        private int userFlagCount;
+        private boolean myFlag;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class GuessRow {
+        private String id;
+        private String countryCode;
+        private boolean correct;
+        private int timeTakenMs;
+        private int pointsEarned;
+        private String guessedAt;
     }
 
     @Transactional(readOnly = true)
@@ -139,36 +163,113 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public HistoryPage getHistory(String email, int page, int size) {
-        User user = findUser(email);
+        User viewer = findUser(email);
         Pageable pageable = PageRequest.of(page, size);
         Page<GameSession> sessionPage =
-                gameSessionRepository.findByUserIdOrderByStartedAtDesc(user.getId(), pageable);
+                gameSessionRepository.findByUserIdOrderByStartedAtDesc(viewer.getId(), pageable);
 
         List<SessionSummary> summaries = sessionPage.getContent().stream()
-                .map(s -> {
-                    double accuracy = s.getTotalCount() > 0
-                            ? (double) s.getCorrectCount() / s.getTotalCount() * 100.0
-                            : 0.0;
-                    String playedAt = s.getCompletedAt() != null
-                            ? s.getCompletedAt().toString()
-                            : s.getStartedAt() != null ? s.getStartedAt().toString() : null;
-                    return SessionSummary.builder()
-                            .sessionId(s.getId())
-                            .mapType(s.getMapType())
-                            .score(s.getFinalScore())
-                            .correctCount(s.getCorrectCount())
-                            .totalCount(s.getTotalCount())
-                            .accuracy(accuracy)
-                            .bestStreak(s.getBestStreak())
-                            .playedAt(playedAt)
-                            .build();
-                })
+                .map(s -> toSummary(s, viewer.getId()))
                 .toList();
 
         return HistoryPage.builder()
                 .content(summaries)
                 .totalElements(sessionPage.getTotalElements())
                 .totalPages(sessionPage.getTotalPages())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public HistoryPage getPublicHistory(String viewerEmail, String targetUserId, int page, int size) {
+        User viewer = findUser(viewerEmail);
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<GameSession> sessionPage =
+                gameSessionRepository.findByUserIdOrderByStartedAtDesc(target.getId(), pageable);
+
+        List<SessionSummary> summaries = sessionPage.getContent().stream()
+                .map(s -> toSummary(s, viewer.getId()))
+                .toList();
+
+        return HistoryPage.builder()
+                .content(summaries)
+                .totalElements(sessionPage.getTotalElements())
+                .totalPages(sessionPage.getTotalPages())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GuessRow> getSessionGuesses(String viewerEmail, String sessionId) {
+        findUser(viewerEmail); // require auth
+        gameSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+
+        return guessRecordRepository.findBySessionIdOrderByGuessedAtAsc(sessionId).stream()
+                .map(g -> GuessRow.builder()
+                        .id(g.getId())
+                        .countryCode(g.getCountryCode())
+                        .correct(g.isCorrect())
+                        .timeTakenMs(g.getTimeTakenMs())
+                        .pointsEarned(g.getPointsEarned())
+                        .guessedAt(g.getGuessedAt() != null ? g.getGuessedAt().toString() : null)
+                        .build())
+                .toList();
+    }
+
+    @Transactional
+    public Map<String, Object> flagSession(String viewerEmail, String sessionId) {
+        User viewer = findUser(viewerEmail);
+        gameSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+
+        if (userFlagRepository.findBySessionIdAndUserId(sessionId, viewer.getId()).isEmpty()) {
+            userFlagRepository.save(UserSessionFlag.builder()
+                    .sessionId(sessionId)
+                    .userId(viewer.getId())
+                    .build());
+        }
+        long count = userFlagRepository.countBySessionId(sessionId);
+        return Map.of("flagged", true, "count", count);
+    }
+
+    @Transactional
+    public Map<String, Object> unflagSession(String viewerEmail, String sessionId) {
+        User viewer = findUser(viewerEmail);
+        userFlagRepository.deleteBySessionIdAndUserId(sessionId, viewer.getId());
+        long count = userFlagRepository.countBySessionId(sessionId);
+        return Map.of("flagged", false, "count", count);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getFlagStatus(String viewerEmail, String sessionId) {
+        User viewer = findUser(viewerEmail);
+        boolean flagged = userFlagRepository.findBySessionIdAndUserId(sessionId, viewer.getId()).isPresent();
+        long count = userFlagRepository.countBySessionId(sessionId);
+        return Map.of("flagged", flagged, "count", count);
+    }
+
+    private SessionSummary toSummary(GameSession s, String viewerId) {
+        double accuracy = s.getTotalCount() > 0
+                ? (double) s.getCorrectCount() / s.getTotalCount() * 100.0
+                : 0.0;
+        String playedAt = s.getCompletedAt() != null
+                ? s.getCompletedAt().toString()
+                : s.getStartedAt() != null ? s.getStartedAt().toString() : null;
+        long userFlagCount = userFlagRepository.countBySessionId(s.getId());
+        boolean myFlag = userFlagRepository.findBySessionIdAndUserId(s.getId(), viewerId).isPresent();
+        return SessionSummary.builder()
+                .sessionId(s.getId())
+                .mapType(s.getMapType())
+                .score(s.getFinalScore())
+                .correctCount(s.getCorrectCount())
+                .totalCount(s.getTotalCount())
+                .accuracy(accuracy)
+                .bestStreak(s.getBestStreak())
+                .playedAt(playedAt)
+                .userFlagCount((int) userFlagCount)
+                .myFlag(myFlag)
                 .build();
     }
 
@@ -240,7 +341,6 @@ public class UserService {
 
         String avatarUrl;
         if (cloudinary != null) {
-            // Use Cloudinary when configured
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> result = cloudinary.uploader().upload(
@@ -256,7 +356,6 @@ public class UserService {
                 throw new UncheckedIOException("Cloudinary upload failed", e);
             }
         } else {
-            // Fallback: local filesystem
             String original = file.getOriginalFilename();
             String ext = (original != null && original.contains("."))
                     ? original.substring(original.lastIndexOf('.') + 1).toLowerCase() : "jpg";

@@ -161,7 +161,12 @@ function MatchesModal({ user, onClose, onUnbanned }: { user: AdminUser; onClose:
                     )}
                     {s.flagCount > 0 && (
                       <span className="text-[10px] rounded px-1.5 py-0.5 font-bold border bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
-                        Flagged
+                        Admin flagged
+                      </span>
+                    )}
+                    {(s.userFlagCount ?? 0) > 0 && (
+                      <span className="text-[10px] rounded px-1.5 py-0.5 font-bold border bg-orange-500/20 text-orange-300 border-orange-500/30" title="User-submitted flags (indicators only)">
+                        {s.userFlagCount}🚩 user flag{s.userFlagCount !== 1 ? "s" : ""}
                       </span>
                     )}
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${s.status === "COMPLETED" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-muted text-muted-foreground border-border"}`}>

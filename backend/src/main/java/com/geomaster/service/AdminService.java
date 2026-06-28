@@ -6,6 +6,7 @@ import com.geomaster.repository.FriendshipRepository;
 import com.geomaster.repository.GameSessionRepository;
 import com.geomaster.repository.GuessRecordRepository;
 import com.geomaster.repository.UserRepository;
+import com.geomaster.repository.UserSessionFlagRepository;
 import com.geomaster.exception.SessionNotFoundException;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class AdminService {
     private final GameSessionRepository gameSessionRepository;
     private final GuessRecordRepository guessRecordRepository;
     private final FriendshipRepository friendshipRepository;
+    private final UserSessionFlagRepository userFlagRepository;
 
     public void requireAdmin(String callerEmail) {
         User caller = userRepository.findByEmail(callerEmail)
@@ -73,6 +75,7 @@ public class AdminService {
         private String startedAt;
         private String completedAt;
         private int flagCount;
+        private int userFlagCount;
         private List<GuessRow> guesses;
     }
 
@@ -164,6 +167,7 @@ public class AdminService {
                     .startedAt(s.getStartedAt() != null ? s.getStartedAt().toString() : null)
                     .completedAt(s.getCompletedAt() != null ? s.getCompletedAt().toString() : null)
                     .flagCount(s.getFlagCount())
+                    .userFlagCount((int) userFlagRepository.countBySessionId(s.getId()))
                     .guesses(guesses)
                     .build();
         }).toList();

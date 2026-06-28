@@ -86,4 +86,52 @@ public class UserController {
         String avatarUrl = userService.uploadAvatar(userDetails.getUsername(), file);
         return ResponseEntity.ok(Map.of("avatarUrl", avatarUrl));
     }
+
+    // ── Public history for a followed user ──────────────────────────────────
+
+    @GetMapping("/users/{userId}/history")
+    public ResponseEntity<UserService.HistoryPage> getPublicHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(
+                userService.getPublicHistory(userDetails.getUsername(), userId, page, size));
+    }
+
+    // ── Session guesses (own or followed user's session) ────────────────────
+
+    @GetMapping("/sessions/{sessionId}/guesses")
+    public ResponseEntity<List<UserService.GuessRow>> getSessionGuesses(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String sessionId) {
+        return ResponseEntity.ok(
+                userService.getSessionGuesses(userDetails.getUsername(), sessionId));
+    }
+
+    // ── User-level session flags ─────────────────────────────────────────────
+
+    @PostMapping("/sessions/{sessionId}/user-flag")
+    public ResponseEntity<Map<String, Object>> flagSession(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String sessionId) {
+        return ResponseEntity.ok(
+                userService.flagSession(userDetails.getUsername(), sessionId));
+    }
+
+    @DeleteMapping("/sessions/{sessionId}/user-flag")
+    public ResponseEntity<Map<String, Object>> unflagSession(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String sessionId) {
+        return ResponseEntity.ok(
+                userService.unflagSession(userDetails.getUsername(), sessionId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/user-flag")
+    public ResponseEntity<Map<String, Object>> getFlagStatus(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String sessionId) {
+        return ResponseEntity.ok(
+                userService.getFlagStatus(userDetails.getUsername(), sessionId));
+    }
 }

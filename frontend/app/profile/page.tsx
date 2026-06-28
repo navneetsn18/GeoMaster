@@ -25,6 +25,7 @@ import { userApi, updateProfile } from "@/lib/api";
 import { getStoredUser, getToken, storeUser } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/avatar";
 import { formatScore, formatAccuracy } from "@/lib/utils";
+import { UserMatchHistoryModal } from "@/components/UserMatchHistoryModal";
 import type { UserStats, GameModeStats, Following, User } from "@/types";
 
 const MODE_LABELS: Record<string, string> = {
@@ -51,6 +52,7 @@ export default function ProfilePage() {
   const [editField, setEditField] = useState<"username" | "email" | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<{ id: string; username: string } | null>(null);
   const [adminContacts, setAdminContacts] = useState<import("@/types").AdminContact[]>([]);
 
   useEffect(() => {
@@ -181,6 +183,7 @@ export default function ProfilePage() {
   ];
 
   return (
+    <>
     <div className="container py-8 max-w-5xl space-y-8">
       {/* Ban banner */}
       {user.banned && (
@@ -421,14 +424,26 @@ export default function ProfilePage() {
                         )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-muted-foreground hover:text-destructive shrink-0 px-2"
-                      onClick={() => handleUnfollow(person.username)}
-                    >
-                      Unfollow
-                    </Button>
+                    <div className="flex gap-1 shrink-0">
+                      {!person.banned && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-muted-foreground hover:text-primary px-2"
+                          onClick={() => setHistoryTarget({ id: person.id, username: person.username })}
+                        >
+                          Matches
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-muted-foreground hover:text-destructive px-2"
+                        onClick={() => handleUnfollow(person.username)}
+                      >
+                        Unfollow
+                      </Button>
+                    </div>
                   </div>
                   {person.banned ? (
                     <p className="text-xs text-red-400/70 italic">Account suspended by admin.</p>
@@ -459,5 +474,14 @@ export default function ProfilePage() {
         )}
       </div>
     </div>
+
+    {historyTarget && (
+      <UserMatchHistoryModal
+        userId={historyTarget.id}
+        username={historyTarget.username}
+        onClose={() => setHistoryTarget(null)}
+      />
+    )}
+    </>
   );
 }
