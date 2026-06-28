@@ -25,7 +25,6 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
   const guessedCorrectly = useGameStore((s) => s.guessedCorrectly);
   const wrongGuesses = useGameStore((s) => s.wrongGuesses);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   // Globe rotation + zoom
   const [rotation, setRotation] = useState<[number, number, number]>([-10, -20, 0]);
@@ -123,11 +122,7 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerLeave={(e) => { onPointerUp(); setMousePos(null); }}
-      onMouseMove={(e) => {
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-      }}
+      onPointerLeave={onPointerUp}
     >
       <ComposableMap
         projection="geoOrthographic"
@@ -214,19 +209,6 @@ function WorldMapInner({ onCountryClick, disabled, filterCodes, reviewMode }: Wo
         </Geographies>
       </ComposableMap>
 
-      {/* Hovered country name — follows cursor */}
-      {hoveredId && mousePos && (() => {
-        const alpha2 = ISO_NUMERIC_TO_ALPHA2[hoveredId];
-        const name = alpha2 ? COUNTRY_NAMES[alpha2] : null;
-        return name ? (
-          <div
-            className="absolute bg-background/85 backdrop-blur-sm border border-border/40 px-3 py-1 rounded-full text-xs font-semibold pointer-events-none z-20 shadow-lg -translate-x-1/2"
-            style={{ left: mousePos.x, top: mousePos.y - 38 }}
-          >
-            {name}
-          </div>
-        ) : null;
-      })()}
 
       {/* Drag hint */}
       <div className="absolute bottom-16 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/50 pointer-events-none select-none">
