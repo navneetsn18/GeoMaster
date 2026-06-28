@@ -196,53 +196,198 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef?: React.Ref<HTMLDivElement
       {/* BOTTOM */}
       <div style={{
         position: "relative", zIndex: 1,
-        display: "flex", justifyContent: "space-between", alignItems: "center",
         marginTop: 18, paddingTop: 12,
         borderTop: "1px solid rgba(255,255,255,0.065)",
       }}>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontWeight: 500 }}>{dateStr}</span>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontWeight: 500 }}>geomaster.vercel.app</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontWeight: 500 }}>{dateStr}</span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontWeight: 500 }}>geomaster.vercel.app</span>
+        </div>
+        <div style={{ textAlign: "center", marginTop: 4, fontSize: 9.5, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
+          Made with ❤️ by GeoMaster
+        </div>
       </div>
     </div>
   );
 }
 
+// Pure Canvas 2D card — avoids all html2canvas rendering bugs
+async function drawCardCanvas(data: ShareCardData): Promise<HTMLCanvasElement> {
+  const W = 1200, H = 680, S = 2; // 2× retina (logical: 600×340)
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cx = ctx as any; // letterSpacing not in older TS lib
+
+  function rr(x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, W * 0.7, H);
+  bg.addColorStop(0, "#070d1a"); bg.addColorStop(0.6, "#0c1629"); bg.addColorStop(1, "#070f1f");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // Dot grid
+  ctx.fillStyle = "rgba(255,255,255,0.055)";
+  for (let x = 12; x < W; x += 48) for (let y = 12; y < H; y += 48) {
+    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Glow
+  const glow = ctx.createRadialGradient(W * 0.55, H * 0.65, 0, W * 0.55, H * 0.65, 360);
+  glow.addColorStop(0, "rgba(99,102,241,0.13)"); glow.addColorStop(1, "rgba(99,102,241,0)");
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  // Inner border
+  rr(28, 28, W - 56, H - 56, 36);
+  ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.018)"; ctx.fill();
+
+  // --- Logo row (logical y-center = 39) ---
+  const logoX = 47 * S, logoY = 39 * S;
+  const logoGrad = ctx.createLinearGradient(logoX - 22, logoY - 22, logoX + 22, logoY + 22);
+  logoGrad.addColorStop(0, "#6366f1"); logoGrad.addColorStop(1, "#4ade80");
+  ctx.fillStyle = logoGrad;
+  ctx.beginPath(); ctx.arc(logoX, logoY, 11 * S, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.beginPath(); ctx.arc(logoX, logoY, 5 * S, 0, Math.PI * 2); ctx.fill();
+
+  ctx.font = `900 ${17 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#fff"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.fillText("GeoMaster", 62 * S, logoY);
+
+  const modeLabel = data.mapType ? (MODE_LABELS[data.mapType] ?? data.mapType) : null;
+  if (modeLabel) {
+    ctx.font = `600 ${11.5 * S}px Inter, system-ui, sans-serif`;
+    const tw = ctx.measureText(modeLabel).width;
+    const padX = 11 * S, bh = 18 * S, bw = tw + padX * 2;
+    const bx = W - 36 * S - bw, by = logoY - bh / 2;
+    rr(bx, by, bw, bh, bh / 2);
+    ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.11)"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(modeLabel, bx + bw / 2, logoY);
+  }
+
+  // --- Main area: logical y = 72 to 258, center = 165 ---
+  const mainCY = 165 * S;
+  const avatarCX = 84 * S, avatarCY = mainCY, avatarR = 34 * S;
+
+  if (data.avatarDataUrl) {
+    try {
+      const img = await new Promise<HTMLImageElement>((res, rej) => {
+        const i = new Image(); i.crossOrigin = "anonymous";
+        i.onload = () => res(i); i.onerror = rej; i.src = data.avatarDataUrl!;
+      });
+      ctx.save();
+      ctx.beginPath(); ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(img, avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
+      ctx.restore();
+    } catch { /* fall through to initial */ }
+  }
+
+  if (!data.avatarDataUrl) {
+    ctx.fillStyle = letterColor(data.username);
+    ctx.beginPath(); ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `800 ${26 * S}px Inter, system-ui, sans-serif`;
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(data.username.charAt(0).toUpperCase(), avatarCX, avatarCY);
+  }
+
+  // Avatar border ring
+  ctx.strokeStyle = "rgba(99,102,241,0.55)"; ctx.lineWidth = 2.5 * S;
+  ctx.beginPath(); ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2); ctx.stroke();
+
+  // @username
+  ctx.font = `700 ${13 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText(`@${data.username}`, avatarCX, avatarCY + avatarR + 7 * S);
+
+  // Rank / PB badge
+  if (data.rank != null || data.isPB) {
+    const badgeText = data.rank != null ? `#${data.rank}` : "PB";
+    const isGold = (data.rank != null && data.rank <= 3) || data.isPB;
+    const badgeTopY = avatarCY + avatarR + 28 * S;
+    ctx.font = `800 ${11.5 * S}px Inter, system-ui, sans-serif`;
+    const bw = ctx.measureText(badgeText).width + 18 * S, bh = 16 * S;
+    const bx = avatarCX - bw / 2;
+    if (isGold) {
+      const g = ctx.createLinearGradient(bx, badgeTopY, bx + bw, badgeTopY);
+      g.addColorStop(0, "#f59e0b"); g.addColorStop(1, "#ef4444"); ctx.fillStyle = g;
+    } else { ctx.fillStyle = "rgba(255,255,255,0.09)"; }
+    rr(bx, badgeTopY, bw, bh, bh / 2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(badgeText, avatarCX, badgeTopY + bh / 2);
+  }
+
+  // Vertical divider
+  ctx.strokeStyle = "rgba(255,255,255,0.09)"; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(144 * S, 82 * S); ctx.lineTo(144 * S, 248 * S);
+  ctx.stroke();
+
+  // Score (baseline at logical 168)
+  const statsX = 158 * S, scoreBaseY = 168 * S;
+  ctx.font = `900 ${66 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#4ade80"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(formatScore(data.score), statsX, scoreBaseY);
+
+  // "FINAL SCORE"
+  ctx.font = `700 ${10 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  cx.letterSpacing = `${2.5 * S}px`;
+  ctx.fillText("FINAL SCORE", statsX, scoreBaseY + 16 * S);
+  cx.letterSpacing = "0px";
+
+  // Stats row
+  const statItems = [
+    { label: "Accuracy", val: formatAccuracy(data.accuracy), color: "#818cf8" },
+    ...(data.streak != null ? [{ label: "Streak", val: `${data.streak}x`, color: "#fb923c" }] : []),
+    ...(data.correct != null && data.total != null ? [{ label: "Correct", val: `${data.correct}/${data.total}`, color: "#4ade80" }] : []),
+  ];
+  let sx = statsX;
+  const statValY = scoreBaseY + 50 * S;
+  for (const st of statItems) {
+    ctx.font = `800 ${18 * S}px Inter, system-ui, sans-serif`;
+    ctx.fillStyle = st.color; ctx.textBaseline = "alphabetic";
+    ctx.fillText(st.val, sx, statValY);
+    ctx.font = `600 ${9.5 * S}px Inter, system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.38)";
+    cx.letterSpacing = `${S}px`;
+    ctx.fillText(st.label.toUpperCase(), sx, statValY + 16 * S);
+    cx.letterSpacing = "0px";
+    sx += 80 * S;
+  }
+
+  // --- Bottom ---
+  ctx.strokeStyle = "rgba(255,255,255,0.065)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(36 * S, 268 * S); ctx.lineTo((600 - 36) * S, 268 * S); ctx.stroke();
+
+  const dateStr = data.date
+    ? new Date(data.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  ctx.font = `500 ${11 * S}px Inter, system-ui, sans-serif`;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(255,255,255,0.28)"; ctx.textAlign = "left";
+  ctx.fillText(dateStr, 36 * S, 284 * S);
+  ctx.fillStyle = "rgba(255,255,255,0.22)"; ctx.textAlign = "right";
+  ctx.fillText("geomaster.vercel.app", (600 - 36) * S, 284 * S);
+
+  ctx.font = `500 ${10 * S}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.28)"; ctx.textAlign = "center";
+  ctx.fillText("Made with ❤️ by GeoMaster", W / 2, 308 * S);
+
+  return canvas;
+}
+
 async function captureAndExport(data: ShareCardData, action: "share" | "download") {
-  // Render card off-screen at exact size, capture that — avoids dialog/scroll/transform distortion
-  const container = document.createElement("div");
-  container.style.cssText = "position:fixed;left:-9999px;top:0;width:600px;height:340px;";
-  document.body.appendChild(container);
-
-  const { createRoot } = await import("react-dom/client");
-  const { createElement } = await import("react");
-
-  const root = createRoot(container);
-
-  await new Promise<void>(resolve => {
-    root.render(createElement(ScoreCardCanvas, { data }));
-    // Give React two frames to render and apply styles
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-  });
-
-  const el = container.firstElementChild as HTMLDivElement;
-  const html2canvas = (await import("html2canvas")).default;
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: false,
-    backgroundColor: "#070d1a",
-    logging: false,
-    width: 600,
-    height: 340,
-    x: 0,
-    y: 0,
-    scrollX: 0,
-    scrollY: 0,
-  });
-
-  root.unmount();
-  document.body.removeChild(container);
-
+  const canvas = await drawCardCanvas(data);
   const filename = `geomaster-${data.username}-${data.score}.png`;
   await new Promise<void>(resolve => {
     canvas.toBlob(async blob => {

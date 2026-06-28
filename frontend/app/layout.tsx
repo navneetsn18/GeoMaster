@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "sonner";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -26,6 +27,7 @@ export default function RootLayout({
             <div className="relative z-10 w-full min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-1">{children}</main>
+              <Footer />
             </div>
           </AuroraBackground>
           <Toaster richColors position="top-right" />
