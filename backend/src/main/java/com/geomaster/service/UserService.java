@@ -221,8 +221,11 @@ public class UserService {
     @Transactional
     public Map<String, Object> flagSession(String viewerEmail, String sessionId) {
         User viewer = findUser(viewerEmail);
-        gameSessionRepository.findById(sessionId)
+        GameSession session = gameSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        if (viewer.getId().equals(session.getUserId())) {
+            throw new IllegalArgumentException("Cannot flag your own session");
+        }
 
         if (userFlagRepository.findBySessionIdAndUserId(sessionId, viewer.getId()).isEmpty()) {
             userFlagRepository.save(UserSessionFlag.builder()

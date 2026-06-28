@@ -337,6 +337,17 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* My match history */}
+      <div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => user && setHistoryTarget({ id: user.id, username: user.username })}
+        >
+          🏟️ My Match History
+        </Button>
+      </div>
+
       {/* Mode breakdown */}
       {modeStats.length > 0 && (
         <div>

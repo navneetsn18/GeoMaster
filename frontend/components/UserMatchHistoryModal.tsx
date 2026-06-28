@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { userApi } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import { formatDate, formatAccuracy, formatScore } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ function GuessDetail({ sessionId }: { sessionId: string }) {
   );
 }
 
-function SessionRow({ game }: { game: RecentGame }) {
+function SessionRow({ game, isSelf }: { game: RecentGame; isSelf: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [flagged, setFlagged] = useState(game.myFlag ?? false);
   const [flagCount, setFlagCount] = useState(game.userFlagCount ?? 0);
@@ -130,18 +131,20 @@ function SessionRow({ game }: { game: RecentGame }) {
           {flagCount > 0 && (
             <span className="text-xs text-orange-400 font-semibold">{flagCount}🚩</span>
           )}
-          <button
-            onClick={handleFlag}
-            disabled={flagging}
-            title={flagged ? "Remove flag" : "Flag this match"}
-            className={`p-1.5 rounded transition-colors ${
-              flagged
-                ? "text-orange-400 hover:text-orange-300 bg-orange-400/10"
-                : "text-muted-foreground hover:text-orange-400"
-            }`}
-          >
-            <Flag className="w-3.5 h-3.5" />
-          </button>
+          {!isSelf && (
+            <button
+              onClick={handleFlag}
+              disabled={flagging}
+              title={flagged ? "Remove flag" : "Flag this match"}
+              className={`p-1.5 rounded transition-colors ${
+                flagged
+                  ? "text-orange-400 hover:text-orange-300 bg-orange-400/10"
+                  : "text-muted-foreground hover:text-orange-400"
+              }`}
+            >
+              <Flag className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors"
@@ -164,6 +167,8 @@ function SessionRow({ game }: { game: RecentGame }) {
 export function UserMatchHistoryModal({ userId, username, onClose }: Props) {
   const [sessions, setSessions] = useState<RecentGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const me = getStoredUser();
+  const isSelf = me?.id === userId;
 
   useEffect(() => {
     userApi
@@ -178,8 +183,10 @@ export function UserMatchHistoryModal({ userId, username, onClose }: Props) {
       <div className="bg-background border border-border rounded-xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h2 className="text-base font-semibold">{username}'s Matches</h2>
-            <p className="text-xs text-muted-foreground">Flag suspicious matches as indicators for admin</p>
+            <h2 className="text-base font-semibold">{isSelf ? "My Matches" : `${username}'s Matches`}</h2>
+            <p className="text-xs text-muted-foreground">
+              {isSelf ? "Your match history with per-answer timing" : "Flag suspicious matches as indicators for admin"}
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>✕</Button>
         </div>
@@ -194,7 +201,7 @@ export function UserMatchHistoryModal({ userId, username, onClose }: Props) {
           ) : sessions.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground text-sm">No matches found.</div>
           ) : (
-            sessions.map((g) => <SessionRow key={g.sessionId} game={g} />)
+            sessions.map((g) => <SessionRow key={g.sessionId} game={g} isSelf={isSelf} />)
           )}
         </div>
       </div>
