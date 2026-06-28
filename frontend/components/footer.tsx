@@ -8,7 +8,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full py-3 text-center text-xs text-muted-foreground/50 border-t border-border/30">
-      Made with ❤️ by GeoMaster
+      Made with ❤️ by @navneetsn18
     </footer>
   );
 }

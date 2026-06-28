@@ -204,7 +204,7 @@ function ScoreCardCanvas({ cardRef, data }: { cardRef?: React.Ref<HTMLDivElement
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontWeight: 500 }}>geomaster.vercel.app</span>
         </div>
         <div style={{ textAlign: "center", marginTop: 4, fontSize: 9.5, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-          Made with ❤️ by GeoMaster
+          Made with ❤️ by @navneetsn18
         </div>
       </div>
     </div>
@@ -381,7 +381,7 @@ async function drawCardCanvas(data: ShareCardData): Promise<HTMLCanvasElement> {
 
   ctx.font = `500 ${10 * S}px Inter, system-ui, sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,0.28)"; ctx.textAlign = "center";
-  ctx.fillText("Made with ❤️ by GeoMaster", W / 2, 308 * S);
+  ctx.fillText("Made with ❤️ by @navneetsn18", W / 2, 308 * S);
 
   return canvas;
 }
